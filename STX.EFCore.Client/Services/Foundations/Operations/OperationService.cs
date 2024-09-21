@@ -19,8 +19,14 @@ namespace STX.EFCore.Client.Services.Foundations
             this.dbContext = dbContext;
         }
 
-        public async ValueTask<T> InsertAsync<T>(T @object) where T : class =>
-            throw new NotImplementedException();
+        public async ValueTask<T> InsertAsync<T>(T @object) where T : class
+        {
+            dbContext.Entry(@object).State = EntityState.Added;
+            await dbContext.SaveChangesAsync();
+            dbContext.Entry(@object).State = EntityState.Detached;
+
+            return @object;
+        }
 
         public ValueTask<IQueryable<T>> ReadAllAsync<T>() where T : class =>
             throw new NotImplementedException();

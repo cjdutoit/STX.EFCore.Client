@@ -18,18 +18,17 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
         public async Task InsertAsyncShouldMarkEntityAsAddedSaveChangesAndDetach()
         {
             // Given
-            var options = new DbContextOptionsBuilder<StorageBroker>()
-                .UseInMemoryDatabase(databaseName: "TestDb")
-                .Options;
-
-            using var dbContext = new StorageBroker(options);
-            var service = new OperationService(dbContext);
-
             User randomUser = CreateRandomUser();
             User inputUser = randomUser;
             User expectedUser = inputUser.DeepClone();
             EntityState? stateBeforeSave = null;
             EntityState? stateAfterSave = null;
+
+            var options = new DbContextOptionsBuilder<TestDbContext>()
+                .UseInMemoryDatabase(databaseName: "TestDb").Options;
+
+            TestDbContext dbContext = new TestDbContext(options);
+            OperationService operationService = new OperationService(dbContext);
 
             dbContext.SavingChanges += (sender, e) =>
             {
@@ -44,7 +43,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             };
 
             // When
-            User actualUser = await service.InsertAsync(inputUser);
+            User actualUser = await operationService.InsertAsync(inputUser);
             EntityState stateAfterExplicitDetach = dbContext.Entry(inputUser).State;
 
             // Then
@@ -54,7 +53,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             var userInDatabase = await dbContext.Users.FindAsync(inputUser.Id);
             userInDatabase.Should().NotBeNull();
             actualUser.Should().BeEquivalentTo(expectedUser);
-            dbContext.Users.Remove(actualUser);
+            await dbContext.Database.EnsureDeletedAsync();
         }
     }
 }
