@@ -21,11 +21,21 @@ namespace STX.EFCore.Client.Services.Foundations
 
         public async ValueTask<T> InsertAsync<T>(T @object) where T : class
         {
-            dbContext.Entry(@object).State = EntityState.Added;
-            await dbContext.SaveChangesAsync();
-            dbContext.Entry(@object).State = EntityState.Detached;
+            try
+            {
+                dbContext.Entry(@object).State = EntityState.Added;
+                await dbContext.SaveChangesAsync();
 
-            return @object;
+                return @object;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                dbContext.Entry(@object).State = EntityState.Detached;
+            }
         }
 
         public ValueTask<IQueryable<T>> ReadAllAsync<T>() where T : class =>
