@@ -8,7 +8,7 @@ using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
 namespace STX.EFCore.Client.Tests.Unit.Brokers.Storages
 {
-    public partial class TestDbContext : EFxceptionsContext, IStorageBroker
+    public partial class TestDbContext : EFxceptionsContext
     {
         public TestDbContext(DbContextOptions<TestDbContext> options) : base(options) { }
 
