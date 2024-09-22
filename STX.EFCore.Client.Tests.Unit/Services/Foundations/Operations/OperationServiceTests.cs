@@ -3,6 +3,8 @@
 // ----------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 using Tynamix.ObjectFiller;
 
@@ -10,6 +12,12 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
 {
     public partial class OperationServiceTests
     {
+        private static int GetRandomNumber() =>
+            new IntRange(min: 2, max: 10).GetValue();
+
+        private static List<User> CreateRandomUsers() =>
+            CreateUserFiller().Create(count: GetRandomNumber()).ToList();
+
         private static User CreateRandomUser() =>
             CreateUserFiller().Create();
 
