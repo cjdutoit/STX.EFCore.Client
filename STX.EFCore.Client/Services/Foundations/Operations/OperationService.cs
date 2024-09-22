@@ -63,8 +63,14 @@ namespace STX.EFCore.Client.Services.Foundations
             }
         }
 
-        public async ValueTask<T> DeleteAsync<T>(T @object) where T : class =>
-                throw new NotImplementedException();
+        public async ValueTask<T> DeleteAsync<T>(T @object) where T : class
+        {
+            dbContext.Entry(@object).State = EntityState.Deleted;
+            await dbContext.SaveChangesAsync();
+            dbContext.Entry(@object).State = EntityState.Detached;
+
+            return @object;
+        }
 
         public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
             throw new NotImplementedException();
