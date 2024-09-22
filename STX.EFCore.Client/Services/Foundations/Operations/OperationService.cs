@@ -42,7 +42,7 @@ namespace STX.EFCore.Client.Services.Foundations
             dbContext.Set<T>();
 
         public async ValueTask<T> SelectAsync<T>(params object[] objectIds) where T : class =>
-            throw new NotImplementedException();
+            await dbContext.FindAsync<T>(objectIds);
 
         public async ValueTask<T> UpdateAsync<T>(T @object) where T : class =>
             throw new NotImplementedException();
