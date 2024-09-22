@@ -38,8 +38,8 @@ namespace STX.EFCore.Client.Services.Foundations
             }
         }
 
-        public ValueTask<IQueryable<T>> ReadAllAsync<T>() where T : class =>
-            throw new NotImplementedException();
+        public async ValueTask<IQueryable<T>> ReadAllAsync<T>() where T : class =>
+            dbContext.Set<T>();
 
         public ValueTask<T> ReadAsync<T>(params object[] objectIds) where T : class =>
             throw new NotImplementedException();
