@@ -38,22 +38,22 @@ namespace STX.EFCore.Client.Services.Foundations
             }
         }
 
-        public async ValueTask<IQueryable<T>> ReadAllAsync<T>() where T : class =>
+        public async ValueTask<IQueryable<T>> SelectAllAsync<T>() where T : class =>
             dbContext.Set<T>();
 
-        public ValueTask<T> ReadAsync<T>(params object[] objectIds) where T : class =>
+        public async ValueTask<T> SelectAsync<T>(params object[] objectIds) where T : class =>
             throw new NotImplementedException();
 
-        public ValueTask<T> UpdateAsync<T>(T @object) where T : class =>
+        public async ValueTask<T> UpdateAsync<T>(T @object) where T : class =>
             throw new NotImplementedException();
 
-        public ValueTask<T> DeleteAsync<T>(T @object) where T : class =>
+        public async ValueTask<T> DeleteAsync<T>(T @object) where T : class =>
             throw new NotImplementedException();
 
-        public ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
+        public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
             throw new NotImplementedException();
 
-        public ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
+        public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
             throw new NotImplementedException();
     }
 }
