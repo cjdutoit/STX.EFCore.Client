@@ -46,11 +46,21 @@ namespace STX.EFCore.Client.Services.Foundations
 
         public async ValueTask<T> UpdateAsync<T>(T @object) where T : class
         {
-            dbContext.Entry(@object).State = EntityState.Modified;
-            await dbContext.SaveChangesAsync();
-            dbContext.Entry(@object).State = EntityState.Detached;
+            try
+            {
+                dbContext.Entry(@object).State = EntityState.Modified;
+                await dbContext.SaveChangesAsync();
 
-            return @object;
+                return @object;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                dbContext.Entry(@object).State = EntityState.Detached;
+            }
         }
 
         public async ValueTask<T> DeleteAsync<T>(T @object) where T : class =>
