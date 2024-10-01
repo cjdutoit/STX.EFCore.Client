@@ -43,7 +43,17 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             // Then
             actualUsers.Should().BeEquivalentTo(expectedUsers);
             actualUsers.Count.Should().Be(expectedUsers.Count);
-            await dbContext.Database.EnsureDeletedAsync();
+
+            foreach (var user in inputUsers)
+            {
+                var userInDatabase = await dbContext.Users.FindAsync(user.Id);
+
+                if (userInDatabase != null)
+                {
+                    dbContext.Users.Remove(userInDatabase);
+                    await dbContext.SaveChangesAsync();
+                }
+            }
         }
     }
 }

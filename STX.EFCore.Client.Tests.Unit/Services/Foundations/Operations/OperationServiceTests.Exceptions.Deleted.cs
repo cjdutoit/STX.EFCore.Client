@@ -54,7 +54,6 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             stateAfterExplicitDetach.Should().Be(EntityState.Detached);
             var userInDatabase = await dbContext.Users.FindAsync(inputUser.Id);
             userInDatabase.Should().BeNull();
-            await dbContext.Database.EnsureDeletedAsync();
         }
     }
 }
