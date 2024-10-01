@@ -50,10 +50,11 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             stateBeforeSave.Should().Be(EntityState.Added);
             stateAfterSave.Should().Be(EntityState.Unchanged);
             stateAfterExplicitDetach.Should().Be(EntityState.Detached);
+            actualUser.Should().BeEquivalentTo(expectedUser);
             var userInDatabase = await dbContext.Users.FindAsync(inputUser.Id);
             userInDatabase.Should().NotBeNull();
-            actualUser.Should().BeEquivalentTo(expectedUser);
-            await dbContext.Database.EnsureDeletedAsync();
+            dbContext.Users.Remove(userInDatabase);
+            await dbContext.SaveChangesAsync();
         }
     }
 }

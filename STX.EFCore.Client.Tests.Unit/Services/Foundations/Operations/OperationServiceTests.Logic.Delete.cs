@@ -54,7 +54,6 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             var userInDatabase = await dbContext.Users.FindAsync(deletedUser.Id);
             userInDatabase.Should().BeNull();
             actualUser.Should().BeEquivalentTo(expectedUser);
-            await dbContext.Database.EnsureDeletedAsync();
         }
     }
 }

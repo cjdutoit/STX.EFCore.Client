@@ -2,8 +2,8 @@
 // Copyright (c) The Standard Organization: A coalition of the Good-Hearted Engineers
 // ----------------------------------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -17,32 +17,43 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
     public partial class OperationServiceTests
     {
         [Fact]
-        public async Task SelectAllAsyncShouldOnlyReturnExpectedUsersAsync()
+        public async Task BulkInsertAsyncShouldDetachAllEntitiesWhenExceptionIsThrown()
         {
             // Given
-            List<User> randomUsers = CreateRandomUsers();
-            List<User> inputUsers = randomUsers;
-            List<User> storageUsers = inputUsers;
-            List<User> expectedUsers = storageUsers.DeepClone();
+            IEnumerable<User> randomUsers = CreateRandomUsers();
+            IEnumerable<User> inputUsers = randomUsers;
+            List<EntityState?> statesBeforeSave = new List<EntityState?>();
+            List<EntityState?> statesAfterSave = new List<EntityState?>();
+            List<EntityState?> statesAfterExplicitDetach = new List<EntityState?>();
 
             var options = new DbContextOptionsBuilder<TestDbContext>()
                 .UseInMemoryDatabase(databaseName: "TestDb").Options;
 
             TestDbContext dbContext = new TestDbContext(options);
-            await dbContext.Users.AddRangeAsync(inputUsers);
-            await dbContext.SaveChangesAsync();
-            var operationService = new OperationService(dbContext);
+            OperationService operationService = new OperationService(dbContext);
+            Exception errorException = new Exception("Database error");
+            Exception expectedException = errorException.DeepClone();
+
+            dbContext.SavingChanges += (sender, e) =>
+            {
+                throw errorException;
+            };
 
             // When
-            IQueryable<User> actualUsersQuery = await operationService.SelectAllAsync<User>();
+            ValueTask bulkInsertUserTask = operationService.BulkInsertAsync(inputUsers);
 
-            List<User> actualUsers = await actualUsersQuery
-                .Where(users => inputUsers.Select(inputUsers => inputUsers.Id)
-                    .Contains(users.Id)).ToListAsync();
+            Exception actualException =
+                await Assert.ThrowsAsync<Exception>(
+                    bulkInsertUserTask.AsTask);
+
+            foreach (var user in inputUsers)
+            {
+                statesAfterExplicitDetach.Add(dbContext.Entry(user).State);
+            }
 
             // Then
-            actualUsers.Should().BeEquivalentTo(expectedUsers);
-            actualUsers.Count.Should().Be(expectedUsers.Count);
+            actualException.Message.Should().BeEquivalentTo(expectedException.Message);
+            statesAfterExplicitDetach.Should().AllBeEquivalentTo(EntityState.Detached);
 
             foreach (var user in inputUsers)
             {
