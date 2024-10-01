@@ -99,9 +99,21 @@ namespace STX.EFCore.Client.Services.Foundations
             }
         }
 
-        public ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class
+        public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class
         {
-            throw new NotImplementedException();
+            try
+            {
+                objects.ToList().ForEach(@object => dbContext.Entry(@object).State = EntityState.Modified);
+                await dbContext.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                objects.ToList().ForEach(@object => dbContext.Entry(@object).State = EntityState.Detached);
+            }
         }
     }
 }
