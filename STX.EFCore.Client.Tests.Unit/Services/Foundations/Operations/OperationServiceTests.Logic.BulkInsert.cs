@@ -3,7 +3,6 @@
 // ----------------------------------------------------------------------------------
 
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -19,8 +18,8 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
         public async Task BulkInsertAsyncShouldMarkEntityAsAddedSaveChangesAndDetach()
         {
             // Given
-            List<User> randomUsers = CreateRandomUsers();
-            List<User> inputUsers = randomUsers;
+            IEnumerable<User> randomUsers = CreateRandomUsers();
+            IEnumerable<User> inputUsers = randomUsers;
             List<EntityState?> statesBeforeSave = new List<EntityState?>();
             List<EntityState?> statesAfterSave = new List<EntityState?>();
             List<EntityState?> statesAfterExplicitDetach = new List<EntityState?>();
@@ -50,7 +49,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             };
 
             // When
-            await operationService.BulkInsertAsync(inputUsers.AsEnumerable());
+            await operationService.BulkInsertAsync(inputUsers);
 
             foreach (var user in inputUsers)
             {
