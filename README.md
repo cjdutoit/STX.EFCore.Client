@@ -4,14 +4,14 @@ A Standard compliant client to wrap EF Core operations that can be used in a Sto
 
 ## Main Features
 
-InsertAsync
-SelectAllAsync
-SelectAsync
-UpdateAsync
-DeleteAsync
-BulkInsertAsync
-BulkUpdateAsync
-BulkDeleteAsync
+- InsertAsync
+- SelectAllAsync
+- SelectAsync
+- UpdateAsync
+- DeleteAsync
+- BulkInsertAsync
+- BulkUpdateAsync
+- BulkDeleteAsync
 
 
 ## How do I use this?
