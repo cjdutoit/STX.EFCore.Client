@@ -23,8 +23,6 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             IEnumerable<User> randomUsers = CreateRandomUsers();
             IEnumerable<User> inputUsers = randomUsers;
             IEnumerable<User> updatedUsers = inputUsers.DeepClone();
-            List<EntityState?> statesBeforeSave = new List<EntityState?>();
-            List<EntityState?> statesAfterSave = new List<EntityState?>();
             List<EntityState?> statesAfterExplicitDetach = new List<EntityState?>();
 
             var options = new DbContextOptionsBuilder<TestDbContext>()

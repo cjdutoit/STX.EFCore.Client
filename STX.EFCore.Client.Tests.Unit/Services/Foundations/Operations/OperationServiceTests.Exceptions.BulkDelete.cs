@@ -17,7 +17,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
     public partial class OperationServiceTests
     {
         [Fact]
-        public async Task BulkInsertAsyncShouldDetachAllEntitiesWhenExceptionIsThrown()
+        public async Task BulkDeleteAsyncShouldDetachAllEntitiesWhenExceptionIsThrown()
         {
             // Given
             IEnumerable<User> randomUsers = CreateRandomUsers();
@@ -31,6 +31,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             OperationService operationService = new OperationService(dbContext);
             Exception errorException = new Exception("Database error");
             Exception expectedException = errorException.DeepClone();
+            await dbContext.BulkInsertAsync(inputUsers);
             bool firstTime = true;
 
             dbContext.SavingChanges += (sender, e) =>
@@ -43,11 +44,11 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             };
 
             // When
-            ValueTask bulkInsertUserTask = operationService.BulkInsertAsync(inputUsers);
+            ValueTask bulkUpdateUserTask = operationService.BulkDeleteAsync(inputUsers);
 
             Exception actualException =
                 await Assert.ThrowsAsync<Exception>(
-                    bulkInsertUserTask.AsTask);
+                    bulkUpdateUserTask.AsTask);
 
             foreach (var user in inputUsers)
             {
