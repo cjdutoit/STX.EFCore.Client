@@ -14,7 +14,7 @@ namespace STX.EFCore.Client.Infrastructure
 
             scriptGenerationService.GenerateBuildScript(
                 branchName: "main",
-                projectName: "GitFyle.Core.Api");
+                projectName: "STX.EFCore.Client");
         }
     }
 }

@@ -4,6 +4,11 @@ on:
     branches:
     - main
   pull_request:
+    types:
+    - opened
+    - synchronize
+    - reopened
+    - closed
     branches:
     - main
 jobs:
@@ -55,7 +60,7 @@ jobs:
 
         sudo apt-get install xmlstarlet
 
-        version_number=$(xmlstarlet sel -t -v "//Version" -n GitFyle.Core.Api/GitFyle.Core.Api.csproj)
+        version_number=$(xmlstarlet sel -t -v "//Version" -n STX.EFCore.Client/STX.EFCore.Client.csproj)
 
         echo "$version_number"
 
@@ -74,7 +79,7 @@ jobs:
 
         sudo apt-get install xmlstarlet
 
-        package_release_notes=$(xmlstarlet sel -t -v "//PackageReleaseNotes" -n GitFyle.Core.Api/GitFyle.Core.Api.csproj)
+        package_release_notes=$(xmlstarlet sel -t -v "//PackageReleaseNotes" -n STX.EFCore.Client/STX.EFCore.Client.csproj)
 
         echo "$package_release_notes"
 
@@ -105,3 +110,23 @@ jobs:
           ${{ steps.extract_package_release_notes.outputs.package_release_notes }}
       env:
         GITHUB_TOKEN: ${{ secrets.PAT_FOR_TAGGING }}
+  publish:
+    runs-on: ubuntu-latest
+    needs:
+    - add_tag
+    if: needs.add_tag.result == 'success'
+    steps:
+    - name: Check out
+      uses: actions/checkout@v3
+    - name: Setup .Net
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.201
+    - name: Restore
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+    - name: Pack NuGet Package
+      run: dotnet pack --configuration Release --include-symbols
+    - name: Push NuGet Package
+      run: dotnet nuget push **/bin/Release/**/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_ACCESS }} --skip-duplicate
