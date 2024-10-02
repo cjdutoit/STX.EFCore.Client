@@ -39,5 +39,8 @@ namespace STX.EFCore.Client.Clients
 
         public ValueTask<T> DeleteAsync<T>(T @object) where T : class =>
             this.operationService.DeleteAsync(@object);
+
+        public async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects) where T : class =>
+            await this.operationService.BulkDeleteAsync(objects);
     }
 }

@@ -27,7 +27,12 @@ namespace STX.EFCore.Client.Infrastructure.Services
                 OnEvents = new Events
                 {
                     Push = new PushEvent { Branches = [branchName] },
-                    PullRequest = new PullRequestEvent { Branches = [branchName] }
+
+                    PullRequest = new PullRequestEvent
+                    {
+                        Types = ["opened", "synchronize", "reopened", "closed"],
+                        Branches = [branchName]
+                    }
                 },
 
                 Jobs = new Dictionary<string, Job>
@@ -85,6 +90,13 @@ namespace STX.EFCore.Client.Infrastructure.Services
                             Name = "Tag and Release"
                         }
                     },
+                    {
+                        "publish",
+                        new PublishJob(
+                            runsOn: BuildMachines.UbuntuLatest,
+                            dependsOn: "add_tag",
+                            nugetApiKey: "${{ secrets.NUGET_ACCESS }}")
+                    }
                 }
             };
 

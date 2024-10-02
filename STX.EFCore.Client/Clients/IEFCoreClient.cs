@@ -17,5 +17,6 @@ namespace STX.EFCore.Client.Clients
         ValueTask<T> UpdateAsync<T>(T @object) where T : class;
         ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class;
         ValueTask<T> DeleteAsync<T>(T @object) where T : class;
+        ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects) where T : class;
     }
 }
