@@ -105,6 +105,35 @@ namespace STX.EFCore.Client.Tests.Acceptance.Clients
         }
 
         [Fact]
+        public async Task ShouldBulkUpdateUsersAsync()
+        {
+            // Given
+            int numberOfUsers = GetRandomNumber();
+            List<User> randomUsers = CreateRandomUsers(count: numberOfUsers);
+            List<User> inputUsers = randomUsers;
+            List<User> updatedUsers = inputUsers.DeepClone();
+            updatedUsers.ForEach(user => user.Email = GetRandomString());
+            List<User> expectedUsers = updatedUsers.DeepClone();
+            List<Guid> expectedUserIds = expectedUsers.Select(u => u.Id).ToList();
+            await efCoreClient.BulkInsertAsync(inputUsers);
+
+            // When
+            await efCoreClient.BulkUpdateAsync(updatedUsers);
+            IQueryable<User> users = await efCoreClient.SelectAllAsync<User>();
+
+            List<User> actualUsers = await users
+                .Where(u => expectedUserIds.Contains(u.Id)).ToListAsync();
+
+            // Then
+            actualUsers.Should().BeEquivalentTo(expectedUsers);
+
+            foreach (User user in inputUsers)
+            {
+                await efCoreClient.DeleteAsync(user);
+            }
+        }
+
+        [Fact]
         public async Task ShouldDeleteUserAsync()
         {
             // Given
