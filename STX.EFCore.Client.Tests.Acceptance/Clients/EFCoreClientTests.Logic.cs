@@ -2,9 +2,11 @@
 // Copyright (c) The Standard Organization: A coalition of the Good-Hearted Engineers
 // ----------------------------------------------------------------------------------
 
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
+using Microsoft.EntityFrameworkCore;
 using STX.EFCore.Client.Tests.Acceptance.Models.Users;
 
 namespace STX.EFCore.Client.Tests.Acceptance.Clients
@@ -54,5 +56,26 @@ namespace STX.EFCore.Client.Tests.Acceptance.Clients
             }
         }
 
+        [Fact]
+        public async Task ShouldSelectAllUsersAsync()
+        {
+            // Given
+            User randomUser = CreateRandomUser();
+            User inputUser = randomUser;
+            User expectedUser = inputUser.DeepClone();
+            await efCoreClient.InsertAsync(inputUser);
+
+            // When
+            IQueryable<User> actualUsers = await efCoreClient.SelectAllAsync<User>();
+            User actualUser = await actualUsers.FirstOrDefaultAsync(user => user.Id == inputUser.Id);
+
+            // Then
+            actualUser.Should().BeEquivalentTo(expectedUser);
+
+            if (actualUser != null)
+            {
+                await efCoreClient.DeleteAsync(actualUser);
+            }
+        }
     }
 }
