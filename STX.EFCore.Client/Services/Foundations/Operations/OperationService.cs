@@ -7,8 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Z.EntityFramework.Extensions;
 
-namespace STX.EFCore.Client.Services.Foundations
+namespace STX.EFCore.Client.Services.Foundations.Operations
 {
     public class OperationService : IOperationService
     {
@@ -17,6 +18,7 @@ namespace STX.EFCore.Client.Services.Foundations
         public OperationService(DbContext dbContext)
         {
             this.dbContext = dbContext;
+            EntityFrameworkManager.ContextFactory = context => this.dbContext;
         }
 
         public async ValueTask<T> InsertAsync<T>(T @object) where T : class
@@ -82,26 +84,13 @@ namespace STX.EFCore.Client.Services.Foundations
             }
         }
 
-        public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class
-        {
-            try
-            {
-                objects.ToList().ForEach(@object => dbContext.Entry(@object).State = EntityState.Added);
-                await dbContext.SaveChangesAsync();
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                objects.ToList().ForEach(@object => dbContext.Entry(@object).State = EntityState.Detached);
-            }
-        }
+        public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
+            await dbContext.BulkInsertAsync(objects);
 
-        public ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class
-        {
-            throw new NotImplementedException();
-        }
+        public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
+            await dbContext.BulkUpdateAsync(objects);
+
+        public async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects) where T : class =>
+            await dbContext.BulkDeleteAsync(objects);
     }
 }

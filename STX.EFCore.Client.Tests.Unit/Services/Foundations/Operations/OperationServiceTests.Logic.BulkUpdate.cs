@@ -2,7 +2,6 @@
 // Copyright (c) The Standard Organization: A coalition of the Good-Hearted Engineers
 // ----------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -17,11 +16,14 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
     public partial class OperationServiceTests
     {
         [Fact]
-        public async Task BulkInsertAsyncShouldDetachAllEntitiesWhenExceptionIsThrown()
+        public async Task BulkUpdateAsyncShouldMarkEntityAsAddedSaveChangesAndDetach()
         {
             // Given
             IEnumerable<User> randomUsers = CreateRandomUsers();
             IEnumerable<User> inputUsers = randomUsers;
+            IEnumerable<User> updatedUsers = inputUsers.DeepClone();
+            List<EntityState?> statesBeforeSave = new List<EntityState?>();
+            List<EntityState?> statesAfterSave = new List<EntityState?>();
             List<EntityState?> statesAfterExplicitDetach = new List<EntityState?>();
 
             var options = new DbContextOptionsBuilder<TestDbContext>()
@@ -29,35 +31,19 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
 
             TestDbContext dbContext = new TestDbContext(options);
             OperationService operationService = new OperationService(dbContext);
-            Exception errorException = new Exception("Database error");
-            Exception expectedException = errorException.DeepClone();
-            bool firstTime = true;
-
-            dbContext.SavingChanges += (sender, e) =>
-            {
-                if (firstTime)
-                {
-                    firstTime = false;
-                    throw errorException;
-                }
-            };
+            await dbContext.BulkInsertAsync(inputUsers);
 
             // When
-            ValueTask bulkInsertUserTask = operationService.BulkInsertAsync(inputUsers);
+            await operationService.BulkUpdateAsync(updatedUsers);
 
-            Exception actualException =
-                await Assert.ThrowsAsync<Exception>(
-                    bulkInsertUserTask.AsTask);
-
-            foreach (var user in inputUsers)
+            foreach (var user in updatedUsers)
             {
                 statesAfterExplicitDetach.Add(dbContext.Entry(user).State);
             }
 
             // Then
-            actualException.Message.Should().BeEquivalentTo(expectedException.Message);
             statesAfterExplicitDetach.Should().AllBeEquivalentTo(EntityState.Detached);
-            await dbContext.BulkDeleteAsync(inputUsers);
+            await dbContext.BulkDeleteAsync(updatedUsers);
         }
     }
 }
