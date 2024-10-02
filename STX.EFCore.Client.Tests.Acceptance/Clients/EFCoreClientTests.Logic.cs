@@ -77,5 +77,26 @@ namespace STX.EFCore.Client.Tests.Acceptance.Clients
                 await efCoreClient.DeleteAsync(actualUser);
             }
         }
+
+        [Fact]
+        public async Task ShouldSelectUserAsync()
+        {
+            // Given
+            User randomUser = CreateRandomUser();
+            User inputUser = randomUser;
+            User expectedUser = inputUser.DeepClone();
+            await efCoreClient.InsertAsync(inputUser);
+
+            // When
+            User actualUser = await efCoreClient.SelectAsync<User>(inputUser.Id);
+
+            // Then
+            actualUser.Should().BeEquivalentTo(expectedUser);
+
+            if (actualUser != null)
+            {
+                await efCoreClient.DeleteAsync(actualUser);
+            }
+        }
     }
 }
