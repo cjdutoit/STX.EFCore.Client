@@ -2,6 +2,8 @@
 // Copyright (c) The Standard Organization: A coalition of the Good-Hearted Engineers
 // ----------------------------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -33,6 +35,31 @@ namespace STX.EFCore.Client.Tests.Acceptance.Clients
             }
         }
 
+        [Fact]
+        public async Task ShouldBulkInsertUsersAsync()
+        {
+            // Given
+            int numberOfUsers = GetRandomNumber();
+            List<User> randomUsers = CreateRandomUsers(count: numberOfUsers);
+            List<User> inputUsers = randomUsers;
+            List<User> expectedUsers = inputUsers.DeepClone();
+            List<Guid> expectedUserIds = expectedUsers.Select(u => u.Id).ToList();
+
+            // When
+            await efCoreClient.BulkInsertAsync<User>(inputUsers);
+            IQueryable<User> users = await efCoreClient.SelectAllAsync<User>();
+
+            List<User> actualUsers = await users
+                .Where(u => expectedUserIds.Contains(u.Id)).ToListAsync();
+
+            // Then
+            actualUsers.Should().BeEquivalentTo(expectedUsers);
+
+            foreach (User user in inputUsers)
+            {
+                await efCoreClient.DeleteAsync(user);
+            }
+        }
 
         [Fact]
         public async Task ShouldSelectAllUsersAsync()
