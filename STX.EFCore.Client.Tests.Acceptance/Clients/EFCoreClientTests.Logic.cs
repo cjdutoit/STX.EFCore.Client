@@ -33,28 +33,6 @@ namespace STX.EFCore.Client.Tests.Acceptance.Clients
             }
         }
 
-        [Fact]
-        public async Task ShouldUpdateUserAsync()
-        {
-            // Given
-            User randomUser = CreateRandomUser();
-            User inputUser = randomUser;
-            User updatedUser = inputUser.DeepClone();
-            updatedUser.Username = GetRandomString();
-            User expectedUser = updatedUser.DeepClone();
-            await efCoreClient.InsertAsync(inputUser);
-
-            // When
-            User actualUser = await efCoreClient.UpdateAsync(updatedUser);
-
-            // Then
-            actualUser.Should().BeEquivalentTo(expectedUser);
-
-            if (actualUser != null)
-            {
-                await efCoreClient.DeleteAsync(actualUser);
-            }
-        }
 
         [Fact]
         public async Task ShouldSelectAllUsersAsync()
@@ -97,6 +75,24 @@ namespace STX.EFCore.Client.Tests.Acceptance.Clients
             {
                 await efCoreClient.DeleteAsync(actualUser);
             }
+        }
+
+        [Fact]
+        public async Task ShouldDeleteUserAsync()
+        {
+            // Given
+            User randomUser = CreateRandomUser();
+            User inputUser = randomUser;
+            User expectedUser = inputUser.DeepClone();
+            await efCoreClient.InsertAsync(inputUser);
+
+            // When
+            User actualUser = await efCoreClient.DeleteAsync(inputUser);
+
+            // Then
+            actualUser.Should().BeEquivalentTo(expectedUser);
+            User userInDatabase = await efCoreClient.SelectAsync<User>(inputUser.Id);
+            userInDatabase.Should().BeNull();
         }
     }
 }
