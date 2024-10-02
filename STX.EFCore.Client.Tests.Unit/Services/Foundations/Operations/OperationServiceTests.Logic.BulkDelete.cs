@@ -2,11 +2,9 @@
 // Copyright (c) The Standard Organization: A coalition of the Good-Hearted Engineers
 // ----------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Force.DeepCloner;
 using Microsoft.EntityFrameworkCore;
 using STX.EFCore.Client.Services.Foundations.Operations;
 using STX.EFCore.Client.Tests.Unit.Brokers.Storages;
@@ -17,7 +15,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
     public partial class OperationServiceTests
     {
         [Fact]
-        public async Task BulkInsertAsyncShouldDetachAllEntitiesWhenExceptionIsThrown()
+        public async Task BulkDeleteAsyncShouldMarkEntityAsAddedSaveChangesAndDetach()
         {
             // Given
             IEnumerable<User> randomUsers = CreateRandomUsers();
@@ -31,25 +29,10 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
 
             TestDbContext dbContext = new TestDbContext(options);
             OperationService operationService = new OperationService(dbContext);
-            Exception errorException = new Exception("Database error");
-            Exception expectedException = errorException.DeepClone();
-            bool firstTime = true;
-
-            dbContext.SavingChanges += (sender, e) =>
-            {
-                if (firstTime)
-                {
-                    firstTime = false;
-                    throw errorException;
-                }
-            };
+            await dbContext.BulkInsertAsync(inputUsers);
 
             // When
-            ValueTask bulkInsertUserTask = operationService.BulkInsertAsync(inputUsers);
-
-            Exception actualException =
-                await Assert.ThrowsAsync<Exception>(
-                    bulkInsertUserTask.AsTask);
+            await operationService.BulkDeleteAsync(inputUsers);
 
             foreach (var user in inputUsers)
             {
@@ -57,9 +40,13 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             }
 
             // Then
-            actualException.Message.Should().BeEquivalentTo(expectedException.Message);
             statesAfterExplicitDetach.Should().AllBeEquivalentTo(EntityState.Detached);
-            await dbContext.BulkDeleteAsync(inputUsers);
+
+            foreach (var user in inputUsers)
+            {
+                var userInDatabase = await dbContext.Users.FindAsync(user.Id);
+                userInDatabase.Should().BeNull();
+            }
         }
     }
 }

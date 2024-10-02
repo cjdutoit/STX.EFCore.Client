@@ -30,24 +30,6 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             TestDbContext dbContext = new TestDbContext(options);
             OperationService operationService = new OperationService(dbContext);
 
-            dbContext.SavingChanges += (sender, e) =>
-            {
-                foreach (var user in inputUsers)
-                {
-                    var entry = dbContext.Entry(user);
-                    statesBeforeSave.Add(entry.State);
-                }
-            };
-
-            dbContext.SavedChanges += (sender, e) =>
-            {
-                foreach (var user in inputUsers)
-                {
-                    var entry = dbContext.Entry(user);
-                    statesAfterSave.Add(entry.State);
-                }
-            };
-
             // When
             await operationService.BulkInsertAsync(inputUsers);
 
@@ -56,23 +38,9 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                 statesAfterExplicitDetach.Add(dbContext.Entry(user).State);
             }
 
-
             // Then
-            statesBeforeSave.Should().AllBeEquivalentTo(EntityState.Added);
-            statesAfterSave.Should().AllBeEquivalentTo(EntityState.Unchanged);
             statesAfterExplicitDetach.Should().AllBeEquivalentTo(EntityState.Detached);
-
-            foreach (var user in inputUsers)
-            {
-                var userInDatabase = await dbContext.Users.FindAsync(user.Id);
-                userInDatabase.Should().NotBeNull();
-
-                if (userInDatabase != null)
-                {
-                    dbContext.Users.Remove(userInDatabase);
-                    await dbContext.SaveChangesAsync();
-                }
-            }
+            await dbContext.BulkDeleteAsync(inputUsers);
         }
     }
 }

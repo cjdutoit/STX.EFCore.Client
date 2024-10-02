@@ -22,6 +22,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             // Given
             IEnumerable<User> randomUsers = CreateRandomUsers();
             IEnumerable<User> inputUsers = randomUsers;
+            IEnumerable<User> updatedUsers = inputUsers.DeepClone();
             List<EntityState?> statesBeforeSave = new List<EntityState?>();
             List<EntityState?> statesAfterSave = new List<EntityState?>();
             List<EntityState?> statesAfterExplicitDetach = new List<EntityState?>();
@@ -33,20 +34,26 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             OperationService operationService = new OperationService(dbContext);
             Exception errorException = new Exception("Database error");
             Exception expectedException = errorException.DeepClone();
+            await dbContext.BulkInsertAsync(inputUsers);
+            bool firstTime = true;
 
             dbContext.SavingChanges += (sender, e) =>
             {
-                throw errorException;
+                if (firstTime)
+                {
+                    firstTime = false;
+                    throw errorException;
+                }
             };
 
             // When
-            ValueTask bulkUpdateUserTask = operationService.BulkUpdateAsync(inputUsers);
+            ValueTask bulkUpdateUserTask = operationService.BulkUpdateAsync(updatedUsers);
 
             Exception actualException =
                 await Assert.ThrowsAsync<Exception>(
                     bulkUpdateUserTask.AsTask);
 
-            foreach (var user in inputUsers)
+            foreach (var user in updatedUsers)
             {
                 statesAfterExplicitDetach.Add(dbContext.Entry(user).State);
             }
@@ -54,17 +61,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             // Then
             actualException.Message.Should().BeEquivalentTo(expectedException.Message);
             statesAfterExplicitDetach.Should().AllBeEquivalentTo(EntityState.Detached);
-
-            foreach (var user in inputUsers)
-            {
-                var userInDatabase = await dbContext.Users.FindAsync(user.Id);
-
-                if (userInDatabase != null)
-                {
-                    dbContext.Users.Remove(userInDatabase);
-                    await dbContext.SaveChangesAsync();
-                }
-            }
+            await dbContext.BulkDeleteAsync(updatedUsers);
         }
     }
 }
