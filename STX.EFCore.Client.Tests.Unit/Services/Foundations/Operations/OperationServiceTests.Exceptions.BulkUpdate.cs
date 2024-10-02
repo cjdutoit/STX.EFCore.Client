@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
 using Microsoft.EntityFrameworkCore;
-using STX.EFCore.Client.Services.Foundations;
+using STX.EFCore.Client.Services.Foundations.Operations;
 using STX.EFCore.Client.Tests.Unit.Brokers.Storages;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 

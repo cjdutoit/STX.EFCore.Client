@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using STX.EFCore.Client.Services.Foundations;
+using STX.EFCore.Client.Services.Foundations.Operations;
 
 namespace STX.EFCore.Client.Clients
 {

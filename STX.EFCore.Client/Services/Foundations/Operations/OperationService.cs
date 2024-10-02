@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
-namespace STX.EFCore.Client.Services.Foundations
+namespace STX.EFCore.Client.Services.Foundations.Operations
 {
     public class OperationService : IOperationService
     {
