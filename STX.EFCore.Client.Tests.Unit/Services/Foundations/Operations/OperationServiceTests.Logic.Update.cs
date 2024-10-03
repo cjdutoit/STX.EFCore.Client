@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
 namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
@@ -21,36 +22,26 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             User updatedUser = inputUser.DeepClone();
             updatedUser.Name = CreateRandomString();
             User expectedUser = inputUser.DeepClone();
-            EntityState? stateBeforeSave = null;
-            EntityState? stateAfterSave = null;
-            await dbContext.Users.AddAsync(inputUser);
-            await dbContext.SaveChangesAsync();
-
-            dbContext.SavingChanges += (sender, e) =>
-            {
-                var entry = dbContext.Entry(inputUser);
-                stateBeforeSave = entry.State;
-            };
-
-            dbContext.SavedChanges += (sender, e) =>
-            {
-                var entry = dbContext.Entry(inputUser);
-                stateAfterSave = entry.State;
-            };
 
             // When
             User actualUser = await operationService.UpdateAsync(inputUser);
-            EntityState stateAfterExplicitDetach = dbContext.Entry(inputUser).State;
 
             // Then
-            stateBeforeSave.Should().Be(EntityState.Modified);
-            stateAfterSave.Should().Be(EntityState.Unchanged);
-            stateAfterExplicitDetach.Should().Be(EntityState.Detached);
             actualUser.Should().BeEquivalentTo(expectedUser);
-            var userInDatabase = await dbContext.Users.FindAsync(inputUser.Id);
-            userInDatabase.Should().NotBeNull();
-            dbContext.Users.Remove(userInDatabase);
-            await dbContext.SaveChangesAsync();
+
+            storageBrokerMock.Verify(broker =>
+                broker.UpdateObjectStateAsync(inputUser, EntityState.Modified),
+                    Times.Once);
+
+            storageBrokerMock.Verify(broker =>
+                broker.SaveChangesAsync(),
+                    Times.Once);
+
+            storageBrokerMock.Verify(broker =>
+                broker.UpdateObjectStateAsync(inputUser, EntityState.Detached),
+                    Times.Once);
+
+            storageBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

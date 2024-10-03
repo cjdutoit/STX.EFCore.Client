@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
-using Microsoft.EntityFrameworkCore;
+using Moq;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
 namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
@@ -19,33 +19,25 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
         {
             // Given
             List<User> randomUsers = CreateRandomUsers();
-            List<User> inputUsers = randomUsers;
-            List<User> storageUsers = inputUsers;
-            List<User> expectedUsers = storageUsers.DeepClone();
-            await dbContext.Users.AddRangeAsync(inputUsers);
-            await dbContext.SaveChangesAsync();
+            IQueryable<User> inputUsers = randomUsers.AsQueryable();
+            IQueryable<User> storageUsers = inputUsers;
+            IQueryable<User> expectedUsers = storageUsers.DeepClone();
+
+            storageBrokerMock.Setup(broker =>
+                broker.SelectAllAsync<User>())
+                    .ReturnsAsync(storageUsers.AsQueryable());
 
             // When
-            IQueryable<User> actualUsersQuery = await operationService.SelectAllAsync<User>();
-
-            List<User> actualUsers = await actualUsersQuery
-                .Where(users => inputUsers.Select(inputUsers => inputUsers.Id)
-                    .Contains(users.Id)).ToListAsync();
+            IQueryable<User> actualUsers = await operationService.SelectAllAsync<User>();
 
             // Then
             actualUsers.Should().BeEquivalentTo(expectedUsers);
-            actualUsers.Count.Should().Be(expectedUsers.Count);
 
-            foreach (var user in inputUsers)
-            {
-                var userInDatabase = await dbContext.Users.FindAsync(user.Id);
+            storageBrokerMock.Verify(broker =>
+                broker.SelectAllAsync<User>(),
+                    Times.Once);
 
-                if (userInDatabase != null)
-                {
-                    dbContext.Users.Remove(userInDatabase);
-                    await dbContext.SaveChangesAsync();
-                }
-            }
+            storageBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

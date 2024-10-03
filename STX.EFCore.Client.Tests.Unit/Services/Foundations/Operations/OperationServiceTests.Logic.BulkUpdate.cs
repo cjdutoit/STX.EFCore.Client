@@ -4,9 +4,8 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using FluentAssertions;
 using Force.DeepCloner;
-using Microsoft.EntityFrameworkCore;
+using Moq;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
 namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
@@ -18,24 +17,17 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
         {
             // Given
             IEnumerable<User> randomUsers = CreateRandomUsers();
-            IEnumerable<User> inputUsers = randomUsers;
-            IEnumerable<User> updatedUsers = inputUsers.DeepClone();
-            List<EntityState?> statesBeforeSave = new List<EntityState?>();
-            List<EntityState?> statesAfterSave = new List<EntityState?>();
-            List<EntityState?> statesAfterExplicitDetach = new List<EntityState?>();
-            await dbContext.BulkInsertAsync(inputUsers);
+            IEnumerable<User> updatedUsers = randomUsers.DeepClone();
 
             // When
             await operationService.BulkUpdateAsync(updatedUsers);
 
-            foreach (var user in updatedUsers)
-            {
-                statesAfterExplicitDetach.Add(dbContext.Entry(user).State);
-            }
-
             // Then
-            statesAfterExplicitDetach.Should().AllBeEquivalentTo(EntityState.Detached);
-            await dbContext.BulkDeleteAsync(updatedUsers);
+            storageBrokerMock.Verify(broker =>
+                broker.BulkUpdateAsync(updatedUsers),
+                    Times.Once);
+
+            storageBrokerMock.VerifyNoOtherCalls();
         }
     }
 }
