@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
 using Microsoft.EntityFrameworkCore;
-using STX.EFCore.Client.Services.Foundations.Operations;
-using STX.EFCore.Client.Tests.Unit.Brokers.Storages;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
 namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
@@ -25,12 +23,6 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             List<EntityState?> statesBeforeSave = new List<EntityState?>();
             List<EntityState?> statesAfterSave = new List<EntityState?>();
             List<EntityState?> statesAfterExplicitDetach = new List<EntityState?>();
-
-            var options = new DbContextOptionsBuilder<TestDbContext>()
-                .UseInMemoryDatabase(databaseName: "TestDb").Options;
-
-            TestDbContext dbContext = new TestDbContext(options);
-            OperationService operationService = new OperationService(dbContext);
             await dbContext.BulkInsertAsync(inputUsers);
 
             // When

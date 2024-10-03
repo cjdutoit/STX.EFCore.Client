@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
 using Microsoft.EntityFrameworkCore;
-using STX.EFCore.Client.Services.Foundations.Operations;
-using STX.EFCore.Client.Tests.Unit.Brokers.Storages;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
 namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
@@ -24,12 +22,6 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             IEnumerable<User> inputUsers = randomUsers;
             IEnumerable<User> updatedUsers = inputUsers.DeepClone();
             List<EntityState?> statesAfterExplicitDetach = new List<EntityState?>();
-
-            var options = new DbContextOptionsBuilder<TestDbContext>()
-                .UseInMemoryDatabase(databaseName: "TestDb").Options;
-
-            TestDbContext dbContext = new TestDbContext(options);
-            OperationService operationService = new OperationService(dbContext);
             Exception errorException = new Exception("Database error");
             Exception expectedException = errorException.DeepClone();
             await dbContext.BulkInsertAsync(inputUsers);

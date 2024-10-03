@@ -7,26 +7,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Z.EntityFramework.Extensions;
+using STX.EFCore.Client.Brokers.Storages;
 
 namespace STX.EFCore.Client.Services.Foundations.Operations
 {
-    public class OperationService : IOperationService
+    internal class OperationService : IOperationService
     {
-        private readonly DbContext dbContext;
+        private readonly IStorageBroker storageBroker;
 
-        public OperationService(DbContext dbContext)
+        public OperationService(IStorageBroker storageBroker)
         {
-            this.dbContext = dbContext;
-            EntityFrameworkManager.ContextFactory = context => this.dbContext;
+            this.storageBroker = storageBroker;
         }
 
         public async ValueTask<T> InsertAsync<T>(T @object) where T : class
         {
             try
             {
-                dbContext.Entry(@object).State = EntityState.Added;
-                await dbContext.SaveChangesAsync();
+                storageBroker.DbContext.Entry(@object).State = EntityState.Added;
+                await storageBroker.DbContext.SaveChangesAsync();
 
                 return @object;
             }
@@ -36,22 +35,22 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             }
             finally
             {
-                dbContext.Entry(@object).State = EntityState.Detached;
+                storageBroker.DbContext.Entry(@object).State = EntityState.Detached;
             }
         }
 
         public async ValueTask<IQueryable<T>> SelectAllAsync<T>() where T : class =>
-            dbContext.Set<T>();
+            storageBroker.DbContext.Set<T>();
 
         public async ValueTask<T> SelectAsync<T>(params object[] objectIds) where T : class =>
-            await dbContext.FindAsync<T>(objectIds);
+            await storageBroker.DbContext.FindAsync<T>(objectIds);
 
         public async ValueTask<T> UpdateAsync<T>(T @object) where T : class
         {
             try
             {
-                dbContext.Entry(@object).State = EntityState.Modified;
-                await dbContext.SaveChangesAsync();
+                storageBroker.DbContext.Entry(@object).State = EntityState.Modified;
+                await storageBroker.DbContext.SaveChangesAsync();
 
                 return @object;
             }
@@ -61,7 +60,7 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             }
             finally
             {
-                dbContext.Entry(@object).State = EntityState.Detached;
+                storageBroker.DbContext.Entry(@object).State = EntityState.Detached;
             }
         }
 
@@ -69,8 +68,8 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
         {
             try
             {
-                dbContext.Entry(@object).State = EntityState.Deleted;
-                await dbContext.SaveChangesAsync();
+                storageBroker.DbContext.Entry(@object).State = EntityState.Deleted;
+                await storageBroker.DbContext.SaveChangesAsync();
 
                 return @object;
             }
@@ -80,17 +79,17 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             }
             finally
             {
-                dbContext.Entry(@object).State = EntityState.Detached;
+                storageBroker.DbContext.Entry(@object).State = EntityState.Detached;
             }
         }
 
         public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
-            await dbContext.BulkInsertAsync(objects);
+            await storageBroker.DbContext.BulkInsertAsync(objects);
 
         public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
-            await dbContext.BulkUpdateAsync(objects);
+            await storageBroker.DbContext.BulkUpdateAsync(objects);
 
         public async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects) where T : class =>
-            await dbContext.BulkDeleteAsync(objects);
+            await storageBroker.DbContext.BulkDeleteAsync(objects);
     }
 }

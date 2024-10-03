@@ -2,10 +2,13 @@
 // Copyright (c) The Standard Organization: A coalition of the Good-Hearted Engineers
 // ----------------------------------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using STX.EFCore.Client.Brokers.Storages;
 using STX.EFCore.Client.Services.Foundations.Operations;
 
 namespace STX.EFCore.Client.Clients
@@ -16,7 +19,8 @@ namespace STX.EFCore.Client.Clients
 
         public EFCoreClient(DbContext dbContext)
         {
-            this.operationService = new OperationService(dbContext);
+            IServiceProvider serviceProvider = RegisterServices(dbContext);
+            this.operationService = serviceProvider.GetRequiredService<IOperationService>();
         }
 
         public async ValueTask<T> InsertAsync<T>(T @object) where T : class =>
@@ -42,5 +46,17 @@ namespace STX.EFCore.Client.Clients
 
         public async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects) where T : class =>
             await this.operationService.BulkDeleteAsync(objects);
+
+        private static IServiceProvider RegisterServices(DbContext dbContext)
+        {
+            var serviceCollection = new ServiceCollection()
+                .AddTransient(_ => dbContext)
+                .AddTransient<IStorageBroker, StorageBroker>()
+                .AddTransient<IOperationService, OperationService>();
+
+            IServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
+
+            return serviceProvider;
+        }
     }
 }

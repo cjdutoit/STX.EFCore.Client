@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
 using Microsoft.EntityFrameworkCore;
-using STX.EFCore.Client.Services.Foundations.Operations;
-using STX.EFCore.Client.Tests.Unit.Brokers.Storages;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
 namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
@@ -24,14 +22,8 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             List<User> inputUsers = randomUsers;
             List<User> storageUsers = inputUsers;
             List<User> expectedUsers = storageUsers.DeepClone();
-
-            var options = new DbContextOptionsBuilder<TestDbContext>()
-                .UseInMemoryDatabase(databaseName: "TestDb").Options;
-
-            TestDbContext dbContext = new TestDbContext(options);
             await dbContext.Users.AddRangeAsync(inputUsers);
             await dbContext.SaveChangesAsync();
-            var operationService = new OperationService(dbContext);
 
             // When
             IQueryable<User> actualUsersQuery = await operationService.SelectAllAsync<User>();
