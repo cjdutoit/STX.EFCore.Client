@@ -24,8 +24,8 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
         {
             try
             {
-                storageBroker.DbContext.Entry(@object).State = EntityState.Added;
-                await storageBroker.DbContext.SaveChangesAsync();
+                await storageBroker.UpdateObjectStateAsync(@object, EntityState.Added);
+                await storageBroker.SaveChangesAsync();
 
                 return @object;
             }
@@ -35,22 +35,22 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             }
             finally
             {
-                storageBroker.DbContext.Entry(@object).State = EntityState.Detached;
+                await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
             }
         }
 
         public async ValueTask<IQueryable<T>> SelectAllAsync<T>() where T : class =>
-            storageBroker.DbContext.Set<T>();
+            await storageBroker.SelectAllAsync<T>();
 
         public async ValueTask<T> SelectAsync<T>(params object[] objectIds) where T : class =>
-            await storageBroker.DbContext.FindAsync<T>(objectIds);
+            await storageBroker.SelectAsync<T>(objectIds);
 
         public async ValueTask<T> UpdateAsync<T>(T @object) where T : class
         {
             try
             {
-                storageBroker.DbContext.Entry(@object).State = EntityState.Modified;
-                await storageBroker.DbContext.SaveChangesAsync();
+                await storageBroker.UpdateObjectStateAsync(@object, EntityState.Modified);
+                await storageBroker.SaveChangesAsync();
 
                 return @object;
             }
@@ -60,7 +60,7 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             }
             finally
             {
-                storageBroker.DbContext.Entry(@object).State = EntityState.Detached;
+                await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
             }
         }
 
@@ -68,8 +68,8 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
         {
             try
             {
-                storageBroker.DbContext.Entry(@object).State = EntityState.Deleted;
-                await storageBroker.DbContext.SaveChangesAsync();
+                await storageBroker.UpdateObjectStateAsync(@object, EntityState.Deleted);
+                await storageBroker.SaveChangesAsync();
 
                 return @object;
             }
@@ -79,17 +79,17 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             }
             finally
             {
-                storageBroker.DbContext.Entry(@object).State = EntityState.Detached;
+                await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
             }
         }
 
         public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
-            await storageBroker.DbContext.BulkInsertAsync(objects);
+            await storageBroker.BulkInsertAsync(objects);
 
         public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
-            await storageBroker.DbContext.BulkUpdateAsync(objects);
+            await storageBroker.BulkUpdateAsync(objects);
 
         public async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects) where T : class =>
-            await storageBroker.DbContext.BulkDeleteAsync(objects);
+            await storageBroker.BulkDeleteAsync(objects);
     }
 }
