@@ -5,9 +5,7 @@
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
-using Microsoft.EntityFrameworkCore;
-using STX.EFCore.Client.Services.Foundations.Operations;
-using STX.EFCore.Client.Tests.Unit.Brokers.Storages;
+using Moq;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
 namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
@@ -20,24 +18,24 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             // Given
             User randomUser = CreateRandomUser();
             User inputUser = randomUser;
-            User expectedUser = inputUser.DeepClone();
+            User storageUser = inputUser;
+            User expectedUser = storageUser.DeepClone();
 
-            var options = new DbContextOptionsBuilder<TestDbContext>()
-                .UseInMemoryDatabase(databaseName: "TestDb").Options;
-
-            TestDbContext dbContext = new TestDbContext(options);
-            await dbContext.Users.AddAsync(inputUser);
-            await dbContext.SaveChangesAsync();
-            var operationService = new OperationService(dbContext);
+            storageBrokerMock.Setup(broker =>
+                broker.SelectAsync<User>(inputUser.Id))
+                    .ReturnsAsync(storageUser);
 
             // When
             User actualUser = await operationService.SelectAsync<User>(inputUser.Id);
 
             // Then
             actualUser.Should().BeEquivalentTo(expectedUser);
-            var userInDatabase = await dbContext.Users.FindAsync(inputUser.Id);
-            dbContext.Users.Remove(userInDatabase);
-            await dbContext.SaveChangesAsync();
+
+            storageBrokerMock.Verify(broker =>
+                broker.SelectAsync<User>(inputUser.Id),
+                    Times.Once);
+
+            storageBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

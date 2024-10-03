@@ -5,6 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Moq;
+using STX.EFCore.Client.Brokers.Storages;
+using STX.EFCore.Client.Services.Foundations.Operations;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 using Tynamix.ObjectFiller;
 
@@ -12,6 +15,15 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
 {
     public partial class OperationServiceTests
     {
+        private readonly Mock<IStorageBroker> storageBrokerMock;
+        private readonly OperationService operationService;
+
+        public OperationServiceTests()
+        {
+            storageBrokerMock = new Mock<IStorageBroker>();
+            this.operationService = new OperationService(storageBrokerMock.Object);
+        }
+
         private static int GetRandomNumber() =>
             new IntRange(min: 2, max: 10).GetValue();
 
