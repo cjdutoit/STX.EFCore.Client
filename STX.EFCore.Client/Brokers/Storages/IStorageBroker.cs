@@ -17,6 +17,7 @@ namespace STX.EFCore.Client.Brokers.Storages
         ValueTask UpdateObjectStateAsync<T>(T @object, EntityState entityState) where T : class;
         ValueTask SaveChangesAsync();
         ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class;
+        ValueTask<List<T>> BulkReadAsync<T>(IEnumerable<T> objects) where T : class;
         ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class;
         ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects) where T : class;
     }
