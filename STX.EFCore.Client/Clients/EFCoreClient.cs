@@ -26,9 +26,6 @@ namespace STX.EFCore.Client.Clients
         public async ValueTask<T> InsertAsync<T>(T @object) where T : class =>
             await this.operationService.InsertAsync(@object);
 
-        public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
-            await this.operationService.BulkInsertAsync(objects);
-
         public async ValueTask<IQueryable<T>> SelectAllAsync<T>() where T : class =>
             await this.operationService.SelectAllAsync<T>();
 
@@ -38,11 +35,17 @@ namespace STX.EFCore.Client.Clients
         public async ValueTask<T> UpdateAsync<T>(T @object) where T : class =>
             await this.operationService.UpdateAsync(@object);
 
-        public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
-            await this.operationService.BulkUpdateAsync(objects);
-
         public ValueTask<T> DeleteAsync<T>(T @object) where T : class =>
             this.operationService.DeleteAsync(@object);
+
+        public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
+            await this.operationService.BulkInsertAsync(objects);
+
+        public async ValueTask<IEnumerable<T>> BulkReadAsync<T>(IEnumerable<T> objects) where T : class =>
+            await this.operationService.BulkReadAsync(objects);
+
+        public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
+            await this.operationService.BulkUpdateAsync(objects);
 
         public async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects) where T : class =>
             await this.operationService.BulkDeleteAsync(objects);

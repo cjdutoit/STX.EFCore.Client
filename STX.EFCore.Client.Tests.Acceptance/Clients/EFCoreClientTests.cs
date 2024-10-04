@@ -5,7 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using STX.EFCore.Client.Clients;
 using STX.EFCore.Client.Tests.Acceptance.Brokers.Storages;
 using STX.EFCore.Client.Tests.Acceptance.Models.Users;
@@ -19,10 +19,19 @@ namespace STX.EFCore.Client.Tests.Acceptance.Clients
 
         public OperationServiceTests()
         {
-            var options = new DbContextOptionsBuilder<TestDbContext>()
-                .UseInMemoryDatabase(databaseName: "TestAcceptanceDb").Options;
+            List<KeyValuePair<string, string>> config = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>(
+                    key: "ConnectionStrings:DefaultConnection",
+                    value: "Server=(localdb)\\MSSQLLocalDB;Database=EFCoreClientAcceptance;" +
+                        "Trusted_Connection=True;MultipleActiveResultSets=true"),
+            };
 
-            TestDbContext dbContext = new TestDbContext(options);
+            var configurationBuilder = new ConfigurationBuilder()
+                .AddInMemoryCollection(initialData: config);
+
+            IConfiguration configuration = configurationBuilder.Build();
+            TestDbContext dbContext = new TestDbContext(configuration);
             this.efCoreClient = new EFCoreClient(dbContext);
         }
 

@@ -27,7 +27,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                    .ReturnsAsync(storageUsers);
 
             // When
-            List<User> actualUsers = await operationService.BulkReadAsync(inputUsers);
+            IEnumerable<User> actualUsers = await operationService.BulkReadAsync(inputUsers);
 
             // Then
             storageBrokerMock.Verify(broker =>

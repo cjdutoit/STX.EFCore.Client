@@ -129,26 +129,16 @@ namespace STX.EFCore.Client.Tests.Acceptance.Clients
             int numberOfUsers = GetRandomNumber();
             List<User> randomUsers = CreateRandomUsers(count: numberOfUsers);
             List<User> inputUsers = randomUsers;
-            List<User> updatedUsers = inputUsers.DeepClone();
-            updatedUsers.ForEach(user => user.Email = GetRandomString());
-            List<User> expectedUsers = updatedUsers.DeepClone();
-            List<Guid> expectedUserIds = expectedUsers.Select(u => u.Id).ToList();
+            List<User> queryUsers = inputUsers;
+            List<User> expectedUsers = queryUsers.DeepClone();
             await efCoreClient.BulkInsertAsync(inputUsers);
 
             // When
-            await efCoreClient.BulkReadUsersAsync(updatedUsers);
-            IQueryable<User> users = await efCoreClient.SelectAllAsync<User>();
-
-            List<User> actualUsers = await users
-                .Where(u => expectedUserIds.Contains(u.Id)).ToListAsync();
+            IEnumerable<User> actualUsers = await efCoreClient.BulkReadAsync(queryUsers);
 
             // Then
             actualUsers.Should().BeEquivalentTo(expectedUsers);
-
-            foreach (User user in inputUsers)
-            {
-                await efCoreClient.DeleteAsync(user);
-            }
+            await this.efCoreClient.BulkDeleteAsync(inputUsers);
         }
 
         [Fact]

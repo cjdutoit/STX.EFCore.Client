@@ -4,14 +4,31 @@
 
 using EFxceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using STX.EFCore.Client.Tests.Acceptance.Models.Users;
 
 namespace STX.EFCore.Client.Tests.Acceptance.Brokers.Storages
 {
     public partial class TestDbContext : EFxceptionsContext
     {
-        public TestDbContext(DbContextOptions<TestDbContext> options) : base(options) { }
+        private readonly IConfiguration configuration;
 
-        public DbSet<User> Users { get; set; }
+        public TestDbContext(IConfiguration configuration)
+        {
+            this.configuration = configuration;
+            this.Database.Migrate();
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+            string connectionString = this.configuration.GetConnectionString(name: "DefaultConnection");
+            optionsBuilder.UseSqlServer(connectionString);
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            AddUserConfigurations(modelBuilder.Entity<User>());
+        }
     }
 }

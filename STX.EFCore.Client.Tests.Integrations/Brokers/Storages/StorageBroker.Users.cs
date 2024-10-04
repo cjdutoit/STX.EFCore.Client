@@ -33,6 +33,9 @@ namespace STX.EFCore.Client.Tests.Integrations.Brokers.Storages
         public async ValueTask BulkInsertUsersAsync(IEnumerable<User> users) =>
             await efCoreClient.BulkInsertAsync<User>(users);
 
+        public async ValueTask<IEnumerable<User>> BulkReadUsersAsync(IEnumerable<User> users) =>
+            await efCoreClient.BulkReadAsync<User>(users);
+
         public async ValueTask BulkUpdateUsersAsync(IEnumerable<User> users) =>
             await efCoreClient.BulkUpdateAsync<User>(users);
 
