@@ -13,7 +13,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
     public partial class OperationServiceTests
     {
         [Fact]
-        public async Task BulkUpdateAsyncShouldMarkEntityAsAddedSaveChangesAndDetach()
+        public async Task BulkUpdateAsyncShouldUpdateAllTheRecords()
         {
             // Given
             IEnumerable<User> randomUsers = CreateRandomUsers();

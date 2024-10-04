@@ -86,6 +86,9 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
         public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
             await storageBroker.BulkInsertAsync(objects);
 
+        public async ValueTask<IEnumerable<T>> BulkReadAsync<T>(IEnumerable<T> objects) where T : class =>
+            await storageBroker.BulkReadAsync(objects);
+
         public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
             await storageBroker.BulkUpdateAsync(objects);
 

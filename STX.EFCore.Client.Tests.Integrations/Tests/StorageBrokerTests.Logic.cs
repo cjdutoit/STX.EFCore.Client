@@ -110,6 +110,25 @@ namespace STX.EFCore.Client.Tests.Integrations.Tests
         }
 
         [Fact]
+        public async Task ShouldBulkReadUsersAsync()
+        {
+            // Given
+            int numberOfUsers = GetRandomNumber();
+            IEnumerable<User> randomUsers = CreateRandomUsers(count: numberOfUsers);
+            IEnumerable<User> inputUsers = randomUsers;
+            IEnumerable<User> expectedUsers = inputUsers.DeepClone();
+            IEnumerable<Guid> expectedUserIds = expectedUsers.Select(u => u.Id).ToList();
+            await storageBroker.BulkInsertUsersAsync(inputUsers);
+
+            // When
+            IEnumerable<User> actualUsers = await storageBroker.BulkReadUsersAsync(inputUsers);
+
+            // Then
+            actualUsers.Should().BeEquivalentTo(expectedUsers);
+            await storageBroker.BulkDeleteUsersAsync(actualUsers);
+        }
+
+        [Fact]
         public async Task ShouldBulkUpdateUsersAsync()
         {
             // Given

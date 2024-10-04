@@ -5,19 +5,19 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using STX.EFCore.Client.Tests.Integrations.Brokers.Storages;
+using STX.EFCore.Client.Tests.Acceptance.Brokers.Storages;
 
-namespace ISL.ReIdentification.Core
+namespace STX.EFCore.Client.Tests.Acceptance
 {
-    internal class StorageBrokerContextFactory : IDesignTimeDbContextFactory<StorageBroker>
+    internal class TestDbContextFactory : IDesignTimeDbContextFactory<TestDbContext>
     {
-        public StorageBroker CreateDbContext(string[] args)
+        public TestDbContext CreateDbContext(string[] args)
         {
             List<KeyValuePair<string, string>> config = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>(
                     key: "ConnectionStrings:DefaultConnection",
-                    value: "Server=(localdb)\\MSSQLLocalDB;Database=EFCoreClientIntegration;" +
+                    value: "Server=(localdb)\\MSSQLLocalDB;Database=EFCoreClientAcceptance;" +
                         "Trusted_Connection=True;MultipleActiveResultSets=true"),
             };
 
@@ -25,7 +25,7 @@ namespace ISL.ReIdentification.Core
                 .AddInMemoryCollection(initialData: config);
 
             IConfiguration configuration = configurationBuilder.Build();
-            return new StorageBroker(configuration);
+            return new TestDbContext(configuration);
         }
     }
 }
