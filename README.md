@@ -10,6 +10,7 @@ A Standard compliant client to wrap EF Core operations that can be used in a Sto
 - UpdateAsync
 - DeleteAsync
 - BulkInsertAsync
+- BulkReadAsync
 - BulkUpdateAsync
 - BulkDeleteAsync
 
@@ -129,10 +130,13 @@ With the client it will look like this and it addresses the sequencing issue tha
             await efCoreClient.UpdateAsync(@object);
 
         private async ValueTask<T> DeleteAsync<T>(T @object) where T : class =>
-            await efCoreClient.UpdateAsync(@object);
+            await efCoreClient.DeleteAsync(@object);
 
         private async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
             await efCoreClient.BulkInsertAsync<T>(objects);
+            
+        private async ValueTask BulkReadAsync<T>(IEnumerable<T> objects) where T : class =>
+            await efCoreClient.BulkReadAsync<T>(objects);
 
         private async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
             await efCoreClient.BulkUpdateAsync<T>(objects);
