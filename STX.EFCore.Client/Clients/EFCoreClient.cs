@@ -38,17 +38,17 @@ namespace STX.EFCore.Client.Clients
         public ValueTask<T> DeleteAsync<T>(T @object) where T : class =>
             this.operationService.DeleteAsync(@object);
 
-        public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
-            await this.operationService.BulkInsertAsync(objects);
+        public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects, bool useTransaction = true) where T : class =>
+            await this.operationService.BulkInsertAsync(objects, useTransaction);
 
         public async ValueTask<IEnumerable<T>> BulkReadAsync<T>(IEnumerable<T> objects) where T : class =>
             await this.operationService.BulkReadAsync(objects);
 
-        public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
-            await this.operationService.BulkUpdateAsync(objects);
+        public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects, bool useTransaction = true) where T : class =>
+            await this.operationService.BulkUpdateAsync(objects, useTransaction);
 
-        public async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects) where T : class =>
-            await this.operationService.BulkDeleteAsync(objects);
+        public async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects, bool useTransaction = true) where T : class =>
+            await this.operationService.BulkDeleteAsync(objects, useTransaction);
 
         private static IServiceProvider RegisterServices(DbContext dbContext)
         {
