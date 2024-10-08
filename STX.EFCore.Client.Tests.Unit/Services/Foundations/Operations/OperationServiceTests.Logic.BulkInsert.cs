@@ -20,7 +20,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             IEnumerable<User> inputUsers = randomUsers;
 
             // When
-            await operationService.BulkInsertAsync(inputUsers, useTransaction);
+            await operationService.BulkInsertAsync(objects: inputUsers, useTransaction);
 
             // Then
             storageBrokerMock.Verify(broker =>
@@ -43,7 +43,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                     .ReturnsAsync(dbContextTransactionMock.Object);
 
             // When
-            await operationService.BulkInsertAsync(inputUsers, useTransaction);
+            await operationService.BulkInsertAsync(objects: inputUsers, useTransaction);
 
             // Then
             storageBrokerMock.Verify(broker =>

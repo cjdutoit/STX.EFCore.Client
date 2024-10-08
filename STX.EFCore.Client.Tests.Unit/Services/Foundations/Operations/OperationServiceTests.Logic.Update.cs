@@ -24,7 +24,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             User expectedUser = inputUser.DeepClone();
 
             // When
-            User actualUser = await operationService.UpdateAsync(inputUser);
+            User actualUser = await operationService.UpdateAsync(@object: inputUser);
 
             // Then
             actualUser.Should().BeEquivalentTo(expectedUser);

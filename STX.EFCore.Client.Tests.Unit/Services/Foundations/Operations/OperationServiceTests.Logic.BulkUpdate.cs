@@ -21,7 +21,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             IEnumerable<User> updatedUsers = randomUsers.DeepClone();
 
             // When
-            await operationService.BulkUpdateAsync(updatedUsers, useTransaction);
+            await operationService.BulkUpdateAsync(objects: updatedUsers, useTransaction);
 
             // Then
             storageBrokerMock.Verify(broker =>
@@ -44,7 +44,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                     .ReturnsAsync(dbContextTransactionMock.Object);
 
             // When
-            await operationService.BulkUpdateAsync(updatedUsers, useTransaction);
+            await operationService.BulkUpdateAsync(objects: updatedUsers, useTransaction);
 
             // Then
             storageBrokerMock.Verify(broker =>

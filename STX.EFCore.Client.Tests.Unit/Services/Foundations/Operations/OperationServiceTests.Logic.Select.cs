@@ -26,7 +26,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                     .ReturnsAsync(storageUser);
 
             // When
-            User actualUser = await operationService.SelectAsync<User>(inputUser.Id);
+            User actualUser = await operationService.SelectAsync<User>(objectIds: inputUser.Id);
 
             // Then
             actualUser.Should().BeEquivalentTo(expectedUser);
