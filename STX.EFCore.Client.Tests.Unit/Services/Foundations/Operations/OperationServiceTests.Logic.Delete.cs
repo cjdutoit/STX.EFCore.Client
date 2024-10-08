@@ -23,7 +23,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             User expectedUser = inputUser.DeepClone();
 
             // When
-            User actualUser = await operationService.DeleteAsync(inputUser);
+            User actualUser = await operationService.DeleteAsync(@object: inputUser);
 
             // Then
             actualUser.Should().BeEquivalentTo(expectedUser);

@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.EntityFrameworkCore.Storage;
 using Z.EntityFramework.Extensions;
 
 namespace STX.EFCore.Client.Brokers.Storages
@@ -33,6 +33,9 @@ namespace STX.EFCore.Client.Brokers.Storages
 
         public async ValueTask SaveChangesAsync() =>
             await this.dbContext.SaveChangesAsync();
+
+        public async ValueTask<IDbContextTransaction> BeginTransactionAsync() =>
+            await this.dbContext.Database.BeginTransactionAsync();
 
         public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
             await this.dbContext.BulkInsertAsync(objects);

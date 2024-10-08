@@ -19,31 +19,30 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
         {
             // Given
             User randomUser = CreateRandomUser();
-            User inputUser = randomUser;
-            User expectedUser = inputUser.DeepClone();
+            User deleteUser = randomUser;
+            User expectedUser = deleteUser.DeepClone();
             Exception errorException = new Exception("Database error");
             Exception expectedException = errorException.DeepClone();
 
             storageBrokerMock.Setup(broker =>
-                broker.UpdateObjectStateAsync(inputUser, EntityState.Deleted))
+                broker.UpdateObjectStateAsync(deleteUser, EntityState.Deleted))
                     .ThrowsAsync(errorException);
 
             // When
-            ValueTask<User> insertUserTask = operationService.DeleteAsync(inputUser);
+            ValueTask<User> insertUserTask = operationService.DeleteAsync(@object: deleteUser);
 
             Exception actualException =
-                await Assert.ThrowsAsync<Exception>(
-                    insertUserTask.AsTask);
+                await Assert.ThrowsAsync<Exception>(testCode: insertUserTask.AsTask);
 
             // Then
             actualException.Message.Should().BeEquivalentTo(expectedException.Message);
 
             storageBrokerMock.Verify(broker =>
-                broker.UpdateObjectStateAsync(inputUser, EntityState.Deleted),
+                broker.UpdateObjectStateAsync(deleteUser, EntityState.Deleted),
                     Times.Once);
 
             storageBrokerMock.Verify(broker =>
-                broker.UpdateObjectStateAsync(inputUser, EntityState.Detached),
+                broker.UpdateObjectStateAsync(deleteUser, EntityState.Detached),
                     Times.Once);
 
             storageBrokerMock.Verify(broker =>

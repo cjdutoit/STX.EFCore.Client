@@ -14,7 +14,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
     public partial class OperationServiceTests
     {
         [Fact]
-        public async Task BulkReadAsyncShoulReturnAllTheRecords()
+        public async Task BulkReadAsyncShouldReturnAllTheRecords()
         {
             // Given
             List<User> randomUsers = CreateRandomUsers();
@@ -27,7 +27,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                    .ReturnsAsync(storageUsers);
 
             // When
-            IEnumerable<User> actualUsers = await operationService.BulkReadAsync(inputUsers);
+            IEnumerable<User> actualUsers = await operationService.BulkReadAsync(objects: inputUsers);
 
             // Then
             storageBrokerMock.Verify(broker =>

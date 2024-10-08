@@ -12,14 +12,15 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
     public partial class OperationServiceTests
     {
         [Fact]
-        public async Task BulkDeleteAsyncShouldDeletedTheRecords()
+        public async Task BulkDeleteAsyncShouldDeletedTheRecordsWithoutTransaction()
         {
             // Given
+            bool useTransaction = false;
             IEnumerable<User> randomUsers = CreateRandomUsers();
             IEnumerable<User> inputUsers = randomUsers;
 
             // When
-            await operationService.BulkDeleteAsync(inputUsers);
+            await operationService.BulkDeleteAsync(objects: inputUsers, useTransaction);
 
             // Then
             storageBrokerMock.Verify(broker =>
@@ -27,6 +28,42 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                     Times.Once);
 
             storageBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task BulkDeleteAsyncShouldDeletedTheRecordsWithTransaction()
+        {
+            // Given
+            bool useTransaction = true;
+            IEnumerable<User> randomUsers = CreateRandomUsers();
+            IEnumerable<User> inputUsers = randomUsers;
+
+            storageBrokerMock.Setup(broker =>
+                broker.BeginTransactionAsync())
+                    .ReturnsAsync(dbContextTransactionMock.Object);
+
+            // When
+            await operationService.BulkDeleteAsync(objects: inputUsers, useTransaction);
+
+            // Then
+            storageBrokerMock.Verify(broker =>
+                broker.BeginTransactionAsync(),
+                    Times.Once);
+
+            storageBrokerMock.Verify(broker =>
+                broker.BulkDeleteAsync(inputUsers),
+                    Times.Once);
+
+            dbContextTransactionMock.Verify(transaction =>
+                transaction.CommitAsync(default),
+                    Times.Once);
+
+            dbContextTransactionMock.Verify(transaction =>
+                transaction.Dispose(),
+                    Times.Once);
+
+            storageBrokerMock.VerifyNoOtherCalls();
+            dbContextTransactionMock.VerifyNoOtherCalls();
         }
     }
 }

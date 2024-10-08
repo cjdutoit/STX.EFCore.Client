@@ -29,11 +29,10 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                     .ThrowsAsync(errorException);
 
             // When
-            ValueTask<User> insertUserTask = operationService.UpdateAsync(inputUser);
+            ValueTask<User> insertUserTask = operationService.UpdateAsync(@object: inputUser);
 
             Exception actualException =
-                await Assert.ThrowsAsync<Exception>(
-                    insertUserTask.AsTask);
+                await Assert.ThrowsAsync<Exception>(testCode: insertUserTask.AsTask);
 
             // Then
             actualException.Message.Should().BeEquivalentTo(expectedException.Message);

@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
 using STX.EFCore.Client.Brokers.Storages;
 using STX.EFCore.Client.Services.Foundations.Operations;
@@ -17,17 +18,18 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
     {
         private readonly Mock<IStorageBroker> storageBrokerMock;
         private readonly OperationService operationService;
-
+        private readonly Mock<IDbContextTransaction> dbContextTransactionMock;
         public OperationServiceTests()
         {
             storageBrokerMock = new Mock<IStorageBroker>();
+            dbContextTransactionMock = new Mock<IDbContextTransaction>();
             this.operationService = new OperationService(storageBrokerMock.Object);
         }
 
         private static int GetRandomNumber() =>
             new IntRange(min: 2, max: 10).GetValue();
 
-        private static string CreateRandomString() =>
+        private static string GetRandomString() =>
             new MnemonicString().GetValue();
 
         private static List<User> CreateRandomUsers() =>
