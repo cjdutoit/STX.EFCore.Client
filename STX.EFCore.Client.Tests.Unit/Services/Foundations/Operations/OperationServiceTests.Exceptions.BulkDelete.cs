@@ -15,12 +15,12 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
     public partial class OperationServiceTests
     {
         [Fact]
-        public async Task BulkInsertAsyncShouldRollbackRecordsOnErrorWithTransaction()
+        public async Task BulkDeleteAsyncShouldRollbackRecordsOnErrorWithTransaction()
         {
             // Given
             bool useTransaction = true;
             IEnumerable<User> randomUsers = CreateRandomUsers();
-            IEnumerable<User> newUsers = randomUsers;
+            IEnumerable<User> deleteUsers = randomUsers;
             Exception someException = new Exception(message: GetRandomString());
             Exception expectedException = someException.DeepClone();
 
@@ -29,12 +29,12 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                     .ReturnsAsync(dbContextTransactionMock.Object);
 
             storageBrokerMock.Setup(broker =>
-                broker.BulkInsertAsync(It.IsAny<IEnumerable<User>>()))
+                broker.BulkDeleteAsync(It.IsAny<IEnumerable<User>>()))
                     .ThrowsAsync(someException);
 
             // When
-            ValueTask insertUserTask = operationService.BulkInsertAsync(objects: newUsers, useTransaction);
-            Exception actualException = await Assert.ThrowsAsync<Exception>(testCode: insertUserTask.AsTask);
+            ValueTask deleteUserTask = operationService.BulkDeleteAsync(objects: deleteUsers, useTransaction);
+            Exception actualException = await Assert.ThrowsAsync<Exception>(testCode: deleteUserTask.AsTask);
 
             // Then
             actualException.Message.Should().BeEquivalentTo(expectedException.Message);
@@ -44,7 +44,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                     Times.Once);
 
             storageBrokerMock.Verify(broker =>
-                broker.BulkInsertAsync(newUsers),
+                broker.BulkDeleteAsync(deleteUsers),
                     Times.Once);
 
             dbContextTransactionMock.Verify(transaction =>

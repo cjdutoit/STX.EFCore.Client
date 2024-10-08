@@ -20,7 +20,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             // Given
             bool useTransaction = true;
             IEnumerable<User> randomUsers = CreateRandomUsers();
-            IEnumerable<User> inputUsers = randomUsers;
+            IEnumerable<User> updatedUsers = randomUsers;
             Exception someException = new Exception(message: GetRandomString());
             Exception expectedException = someException.DeepClone();
 
@@ -33,8 +33,8 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                     .ThrowsAsync(someException);
 
             // When
-            ValueTask updateUserTask = operationService.BulkUpdateAsync(inputUsers, useTransaction);
-            Exception actualException = await Assert.ThrowsAsync<Exception>(updateUserTask.AsTask);
+            ValueTask updateUserTask = operationService.BulkUpdateAsync(objects: updatedUsers, useTransaction);
+            Exception actualException = await Assert.ThrowsAsync<Exception>(testCode: updateUserTask.AsTask);
 
             // Then
             actualException.Message.Should().BeEquivalentTo(expectedException.Message);
@@ -44,7 +44,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                     Times.Once);
 
             storageBrokerMock.Verify(broker =>
-                broker.BulkUpdateAsync(inputUsers),
+                broker.BulkUpdateAsync(updatedUsers),
                     Times.Once);
 
             dbContextTransactionMock.Verify(transaction =>
