@@ -151,7 +151,7 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             }
             else
             {
-                await storageBroker.BulkUpdateAsync(objects);
+                await storageBroker.BulkDeleteAsync(objects);
             }
         }
     }

@@ -12,14 +12,15 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
     public partial class OperationServiceTests
     {
         [Fact]
-        public async Task BulkDeleteAsyncShouldDeletedTheRecords()
+        public async Task BulkDeleteAsyncShouldDeletedTheRecordsWithoutTransaction()
         {
             // Given
+            bool useTransaction = false;
             IEnumerable<User> randomUsers = CreateRandomUsers();
             IEnumerable<User> inputUsers = randomUsers;
 
             // When
-            await operationService.BulkDeleteAsync(inputUsers);
+            await operationService.BulkDeleteAsync(inputUsers, useTransaction);
 
             // Then
             storageBrokerMock.Verify(broker =>
