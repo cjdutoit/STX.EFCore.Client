@@ -29,7 +29,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
         private static int GetRandomNumber() =>
             new IntRange(min: 2, max: 10).GetValue();
 
-        private static string CreateRandomString() =>
+        private static string GetRandomString() =>
             new MnemonicString().GetValue();
 
         private static List<User> CreateRandomUsers() =>

@@ -20,7 +20,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             User randomUser = CreateRandomUser();
             User inputUser = randomUser;
             User updatedUser = inputUser.DeepClone();
-            updatedUser.Name = CreateRandomString();
+            updatedUser.Name = GetRandomString();
             User expectedUser = inputUser.DeepClone();
 
             // When

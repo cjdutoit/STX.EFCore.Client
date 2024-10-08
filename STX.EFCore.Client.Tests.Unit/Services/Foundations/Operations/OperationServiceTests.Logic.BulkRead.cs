@@ -14,7 +14,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
     public partial class OperationServiceTests
     {
         [Fact]
-        public async Task BulkReadAsyncShoulReturnAllTheRecords()
+        public async Task BulkReadAsyncShouldReturnAllTheRecords()
         {
             // Given
             List<User> randomUsers = CreateRandomUsers();
