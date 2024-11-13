@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Force.DeepCloner;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
@@ -27,6 +28,17 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             storageBrokerMock.Verify(broker =>
                 broker.BulkUpdateAsync(updatedUsers),
                     Times.Once);
+
+            storageBrokerMock.Verify(broker =>
+                broker.SaveChangesAsync(),
+                    Times.Once);
+
+            foreach (var user in updatedUsers)
+            {
+                storageBrokerMock.Verify(broker =>
+                    broker.UpdateObjectStateAsync(user, EntityState.Detached),
+                        Times.Once);
+            }
 
             storageBrokerMock.VerifyNoOtherCalls();
         }
