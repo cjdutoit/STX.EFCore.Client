@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
@@ -50,6 +51,13 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             dbContextTransactionMock.Verify(transaction =>
                 transaction.RollbackAsync(default),
                     Times.Once);
+
+            foreach (var user in deleteUsers)
+            {
+                storageBrokerMock.Verify(broker =>
+                    broker.UpdateObjectStateAsync(user, EntityState.Detached),
+                        Times.Once);
+            }
 
             dbContextTransactionMock.Verify(transaction =>
                 transaction.Dispose(),
