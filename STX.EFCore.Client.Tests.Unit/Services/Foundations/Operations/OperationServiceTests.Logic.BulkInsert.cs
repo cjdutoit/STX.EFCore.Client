@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
@@ -54,9 +55,20 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                 broker.BulkInsertAsync(inputUsers),
                     Times.Once);
 
+            storageBrokerMock.Verify(broker =>
+                broker.SaveChangesAsync(),
+                    Times.Once);
+
             dbContextTransactionMock.Verify(transaction =>
                 transaction.CommitAsync(default),
                     Times.Once);
+
+            foreach (var user in inputUsers)
+            {
+                storageBrokerMock.Verify(broker =>
+                    broker.UpdateObjectStateAsync(user, EntityState.Detached),
+                        Times.Once);
+            }
 
             dbContextTransactionMock.Verify(transaction =>
                 transaction.Dispose(),

@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using STX.EFCore.Client.Brokers.Storages;
@@ -92,6 +93,7 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
                 try
                 {
                     await storageBroker.BulkInsertAsync(objects);
+                    await storageBroker.SaveChangesAsync();
                     await transaction.CommitAsync();
                 }
                 catch
@@ -99,15 +101,60 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
                     await transaction.RollbackAsync();
                     throw;
                 }
+                finally
+                {
+                    foreach (var @object in objects)
+                    {
+                        await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                    }
+                }
             }
             else
             {
-                await storageBroker.BulkInsertAsync(objects);
+                try
+                {
+                    await storageBroker.BulkInsertAsync(objects);
+                    await storageBroker.SaveChangesAsync();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    foreach (var @object in objects)
+                    {
+                        await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                    }
+                }
             }
         }
 
-        public async ValueTask<IEnumerable<T>> BulkReadAsync<T>(IEnumerable<T> objects) where T : class =>
-            await storageBroker.BulkReadAsync(objects);
+        public async ValueTask<IEnumerable<T>> BulkReadAsync<T>(IEnumerable<T> objects) where T : class
+        {
+            var entityType = await this.storageBroker.FindEntityType<T>();
+            var keyProperty = entityType?.FindPrimaryKey()?.Properties?.FirstOrDefault();
+
+            if (keyProperty == null)
+                throw new InvalidOperationException($"No primary key defined for entity {typeof(T).Name}");
+
+            var keyValues = objects
+                .Select(obj => keyProperty.PropertyInfo.GetValue(obj))
+                .Where(key => key != null)
+                .ToList();
+
+            if (!keyValues.Any())
+                return Enumerable.Empty<T>();
+
+            var parameter = Expression.Parameter(typeof(T), "e");
+            var property = Expression.Property(parameter, keyProperty.Name);
+            var containsMethod = typeof(List<>).MakeGenericType(keyProperty.ClrType).GetMethod("Contains");
+            var body = Expression.Call(Expression.Constant(keyValues), containsMethod, property);
+            var predicate = Expression.Lambda<Func<T, bool>>(body, parameter);
+            var query = await storageBroker.SelectAllAsync<T>();
+
+            return await query.Where(predicate).ToListAsync();
+        }
 
         public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects, bool useTransaction = true) where T : class
         {
@@ -118,6 +165,7 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
                 try
                 {
                     await storageBroker.BulkUpdateAsync(objects);
+                    await storageBroker.SaveChangesAsync();
                     await transaction.CommitAsync();
                 }
                 catch
@@ -125,10 +173,32 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
                     await transaction.RollbackAsync();
                     throw;
                 }
+                finally
+                {
+                    foreach (var @object in objects)
+                    {
+                        await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                    }
+                }
             }
             else
             {
-                await storageBroker.BulkUpdateAsync(objects);
+                try
+                {
+                    await storageBroker.BulkUpdateAsync(objects);
+                    await storageBroker.SaveChangesAsync();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    foreach (var @object in objects)
+                    {
+                        await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                    }
+                }
             }
         }
 
@@ -141,6 +211,7 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
                 try
                 {
                     await storageBroker.BulkDeleteAsync(objects);
+                    await storageBroker.SaveChangesAsync();
                     await transaction.CommitAsync();
                 }
                 catch
@@ -148,10 +219,32 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
                     await transaction.RollbackAsync();
                     throw;
                 }
+                finally
+                {
+                    foreach (var @object in objects)
+                    {
+                        await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                    }
+                }
             }
             else
             {
-                await storageBroker.BulkDeleteAsync(objects);
+                try
+                {
+                    await storageBroker.BulkDeleteAsync(objects);
+                    await storageBroker.SaveChangesAsync();
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    foreach (var @object in objects)
+                    {
+                        await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                    }
+                }
             }
         }
     }
