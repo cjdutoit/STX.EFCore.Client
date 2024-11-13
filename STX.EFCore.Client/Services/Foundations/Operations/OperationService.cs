@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using STX.EFCore.Client.Brokers.Storages;
@@ -136,25 +137,38 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             var keyProperty = entityType?.FindPrimaryKey()?.Properties?.FirstOrDefault();
 
             if (keyProperty == null)
+            {
                 throw new InvalidOperationException($"No primary key defined for entity {typeof(T).Name}");
+            }
+
+            var keyType = keyProperty.ClrType;
 
             var keyValues = objects
                 .Select(obj => keyProperty.PropertyInfo.GetValue(obj))
                 .Where(key => key != null)
                 .ToList();
 
-            if (!keyValues.Any())
-                return Enumerable.Empty<T>();
+            var castedKeyValues = typeof(Enumerable)
+                .GetMethod(name: "Cast", bindingAttr: BindingFlags.Static | BindingFlags.Public)
+                .MakeGenericMethod(typeArguments: keyType)
+                .Invoke(obj: null, parameters: new object[] { keyValues });
 
-            var parameter = Expression.Parameter(typeof(T), "e");
-            var property = Expression.Property(parameter, keyProperty.Name);
-            var containsMethod = typeof(List<>).MakeGenericType(keyProperty.ClrType).GetMethod("Contains");
-            var body = Expression.Call(Expression.Constant(keyValues), containsMethod, property);
+            var listOfKeyValues = keyValues.Cast<object>().ToList();
+            var parameter = Expression.Parameter(type: typeof(T), name: "e");
+            var property = Expression.Property(expression: parameter, propertyName: keyProperty.Name);
+            var containsMethod = typeof(List<object>).GetMethod("Contains");
+
+            var body = Expression.Call(
+                instance: Expression.Constant(listOfKeyValues),
+                method: containsMethod,
+                arguments: Expression.Convert(property, typeof(object)));
+
             var predicate = Expression.Lambda<Func<T, bool>>(body, parameter);
             var query = await storageBroker.SelectAllAsync<T>();
 
-            return await query.Where(predicate).ToListAsync();
+            return query.Where(predicate).ToList();
         }
+
 
         public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects, bool useTransaction = true) where T : class
         {
