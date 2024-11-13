@@ -96,6 +96,9 @@ namespace STX.EFCore.Client.Infrastructure.Services
                             runsOn: BuildMachines.UbuntuLatest,
                             dependsOn: "add_tag",
                             nugetApiKey: "${{ secrets.NUGET_ACCESS }}")
+                        {
+                            Name = "Publish to NuGet"
+                        }
                     }
                 }
             };
