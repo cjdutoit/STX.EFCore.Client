@@ -7,8 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage;
-using Z.EntityFramework.Extensions;
 
 namespace STX.EFCore.Client.Brokers.Storages
 {
@@ -16,11 +16,17 @@ namespace STX.EFCore.Client.Brokers.Storages
     {
         private readonly DbContext dbContext;
 
-        public StorageBroker(DbContext dbContext)
-        {
+        public StorageBroker(DbContext dbContext) =>
             this.dbContext = dbContext;
-            EntityFrameworkManager.ContextFactory = context => this.dbContext;
-        }
+
+        public async ValueTask<IEntityType> FindEntityType<T>() =>
+            this.dbContext.Model.FindEntityType(typeof(T));
+
+        public async ValueTask SaveChangesAsync() =>
+            await this.dbContext.SaveChangesAsync();
+
+        public async ValueTask<IDbContextTransaction> BeginTransactionAsync() =>
+            await this.dbContext.Database.BeginTransactionAsync();
 
         public async ValueTask<IQueryable<T>> SelectAllAsync<T>() where T : class =>
             this.dbContext.Set<T>();
@@ -31,22 +37,13 @@ namespace STX.EFCore.Client.Brokers.Storages
         public async ValueTask UpdateObjectStateAsync<T>(T @object, EntityState entityState) where T : class =>
             this.dbContext.Entry(@object).State = entityState;
 
-        public async ValueTask SaveChangesAsync() =>
-            await this.dbContext.SaveChangesAsync();
-
-        public async ValueTask<IDbContextTransaction> BeginTransactionAsync() =>
-            await this.dbContext.Database.BeginTransactionAsync();
-
         public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
-            await this.dbContext.BulkInsertAsync(objects);
-
-        public async ValueTask<IEnumerable<T>> BulkReadAsync<T>(IEnumerable<T> objects) where T : class =>
-            await this.dbContext.Set<T>().BulkReadAsync(objects);
+            await this.dbContext.AddRangeAsync(objects);
 
         public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
-            await this.dbContext.BulkUpdateAsync(objects);
+            this.dbContext.UpdateRange(objects);
 
         public async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects) where T : class =>
-            await this.dbContext.BulkDeleteAsync(objects);
+            this.dbContext.RemoveRange(objects);
     }
 }
