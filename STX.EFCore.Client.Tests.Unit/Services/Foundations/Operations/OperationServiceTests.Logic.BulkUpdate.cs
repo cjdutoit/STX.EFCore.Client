@@ -67,9 +67,20 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                 broker.BulkUpdateAsync(updatedUsers),
                     Times.Once);
 
+            storageBrokerMock.Verify(broker =>
+                broker.SaveChangesAsync(),
+                    Times.Once);
+
             dbContextTransactionMock.Verify(transaction =>
                 transaction.CommitAsync(default),
                     Times.Once);
+
+            foreach (var user in updatedUsers)
+            {
+                storageBrokerMock.Verify(broker =>
+                    broker.UpdateObjectStateAsync(user, EntityState.Detached),
+                        Times.Once);
+            }
 
             dbContextTransactionMock.Verify(transaction =>
                 transaction.Dispose(),
