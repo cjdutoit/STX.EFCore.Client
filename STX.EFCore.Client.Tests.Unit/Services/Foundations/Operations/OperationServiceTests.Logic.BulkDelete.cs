@@ -28,6 +28,17 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                 broker.BulkDeleteAsync(inputUsers),
                     Times.Once);
 
+            storageBrokerMock.Verify(broker =>
+                broker.SaveChangesAsync(),
+                    Times.Once);
+
+            foreach (var user in inputUsers)
+            {
+                storageBrokerMock.Verify(broker =>
+                    broker.UpdateObjectStateAsync(user, EntityState.Detached),
+                        Times.Once);
+            }
+
             storageBrokerMock.VerifyNoOtherCalls();
         }
 
