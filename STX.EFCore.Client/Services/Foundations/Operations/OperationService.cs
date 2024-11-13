@@ -31,7 +31,7 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
 
                 return @object;
             }
-            catch (Exception)
+            catch
             {
                 throw;
             }
@@ -56,7 +56,7 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
 
                 return @object;
             }
-            catch (Exception)
+            catch
             {
                 throw;
             }

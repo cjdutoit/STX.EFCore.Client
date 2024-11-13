@@ -2,7 +2,6 @@
 // Copyright (c) The Standard Organization: A coalition of the Good-Hearted Engineers
 // ----------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -40,9 +39,6 @@ namespace STX.EFCore.Client.Brokers.Storages
 
         public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
             await this.dbContext.AddRangeAsync(objects);
-
-        public async ValueTask<IEnumerable<T>> BulkReadAsync<T>(IEnumerable<T> objects) where T : class =>
-            throw new NotImplementedException();
 
         public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
             this.dbContext.UpdateRange(objects);
