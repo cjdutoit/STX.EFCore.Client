@@ -17,10 +17,8 @@ namespace STX.EFCore.Client.Brokers.Storages
     {
         private readonly DbContext dbContext;
 
-        public StorageBroker(DbContext dbContext)
-        {
+        public StorageBroker(DbContext dbContext) =>
             this.dbContext = dbContext;
-        }
 
         public async ValueTask<IEntityType> FindEntityType<T>() =>
             this.dbContext.Model.FindEntityType(typeof(T));
