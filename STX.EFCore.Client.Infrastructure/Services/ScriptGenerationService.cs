@@ -18,7 +18,7 @@ namespace STX.EFCore.Client.Infrastructure.Services
         public ScriptGenerationService() =>
             adotNetClient = new ADotNetClient();
 
-        public void GenerateBuildScript(string branchName, string projectName)
+        public void GenerateBuildScript(string branchName, string projectName, string dotNetVersion)
         {
             var githubPipeline = new GithubPipeline
             {
@@ -37,6 +37,10 @@ namespace STX.EFCore.Client.Infrastructure.Services
 
                 Jobs = new Dictionary<string, Job>
                 {
+                    {
+                        "label",
+                        new LabelJobV2(runsOn: BuildMachines.UbuntuLatest)
+                    },
                     {
                         "build",
                         new Job
@@ -57,7 +61,7 @@ namespace STX.EFCore.Client.Infrastructure.Services
 
                                     With = new TargetDotNetVersionV3
                                     {
-                                        DotNetVersion = "8.0.302"
+                                        DotNetVersion = dotNetVersion
                                     }
                                 },
 
@@ -92,9 +96,10 @@ namespace STX.EFCore.Client.Infrastructure.Services
                     },
                     {
                         "publish",
-                        new PublishJob(
+                        new PublishJobV2(
                             runsOn: BuildMachines.UbuntuLatest,
                             dependsOn: "add_tag",
+                            dotNetVersion: dotNetVersion,
                             nugetApiKey: "${{ secrets.NUGET_ACCESS }}")
                         {
                             Name = "Publish to NuGet"
