@@ -20,6 +20,9 @@ namespace STX.EFCore.Client.Infrastructure.Services
 
         public void GenerateBuildScript(string branchName, string projectName, string dotNetVersion)
         {
+            string acceptanceTestProjectName = "STX.EFCore.Client.Tests.Acceptance";
+            string integrationTestProjectName = "STX.EFCore.Client.Tests.Integrations";
+
             var githubPipeline = new GithubPipeline
             {
                 Name = "Build",
@@ -83,8 +86,20 @@ namespace STX.EFCore.Client.Infrastructure.Services
 
                                 new GithubTask
                                 {
-                                    Name = "Deploy Database",
-                                    Run = $"dotnet ef database update --project {projectName}/{projectName}.csproj --startup-project {projectName}/{projectName}.csproj"
+                                    Name = "Deploy Acceptance Database",
+                                    Run =
+                                        $"dotnet ef database update " +
+                                        $"--project {acceptanceTestProjectName}/{acceptanceTestProjectName}.csproj " +
+                                        $"--startup-project {acceptanceTestProjectName}/{acceptanceTestProjectName}.csproj"
+                                },
+
+                                new GithubTask
+                                {
+                                    Name = "Deploy Integration Database",
+                                    Run =
+                                        $"dotnet ef database update " +
+                                        $"--project {integrationTestProjectName}/{integrationTestProjectName}.csproj " +
+                                        $"--startup-project {integrationTestProjectName}/{integrationTestProjectName}.csproj"
                                 },
 
                                 new TestTask

@@ -102,8 +102,10 @@ jobs:
       run: dotnet build --no-restore
     - name: Install EF Tools
       run: dotnet tool install --global dotnet-ef
-    - name: Deploy Database
-      run: dotnet ef database update --project STX.EFCore.Client/STX.EFCore.Client.csproj --startup-project STX.EFCore.Client/STX.EFCore.Client.csproj
+    - name: Deploy Acceptance Database
+      run: dotnet ef database update --project STX.EFCore.Client.Tests.Acceptance/STX.EFCore.Client.Tests.Acceptance.csproj --startup-project STX.EFCore.Client.Tests.Acceptance/STX.EFCore.Client.Tests.Acceptance.csproj
+    - name: Deploy Integration Database
+      run: dotnet ef database update --project STX.EFCore.Client.Tests.Integrations/STX.EFCore.Client.Tests.Integrations.csproj --startup-project STX.EFCore.Client.Tests.Integrations/STX.EFCore.Client.Tests.Integrations.csproj
     - name: Test
       run: dotnet test --no-build --verbosity normal
   add_tag:
