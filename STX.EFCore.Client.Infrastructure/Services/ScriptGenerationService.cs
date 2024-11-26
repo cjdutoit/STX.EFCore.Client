@@ -18,8 +18,11 @@ namespace STX.EFCore.Client.Infrastructure.Services
         public ScriptGenerationService() =>
             adotNetClient = new ADotNetClient();
 
-        public void GenerateBuildScript(string branchName, string projectName)
+        public void GenerateBuildScript(string branchName, string projectName, string dotNetVersion)
         {
+            string acceptanceTestProjectName = "STX.EFCore.Client.Tests.Acceptance";
+            string integrationTestProjectName = "STX.EFCore.Client.Tests.Integrations";
+
             var githubPipeline = new GithubPipeline
             {
                 Name = "Build",
@@ -37,6 +40,10 @@ namespace STX.EFCore.Client.Infrastructure.Services
 
                 Jobs = new Dictionary<string, Job>
                 {
+                    {
+                        "label",
+                        new LabelJobV2(runsOn: BuildMachines.UbuntuLatest)
+                    },
                     {
                         "build",
                         new Job
@@ -57,7 +64,7 @@ namespace STX.EFCore.Client.Infrastructure.Services
 
                                     With = new TargetDotNetVersionV3
                                     {
-                                        DotNetVersion = "8.0.302"
+                                        DotNetVersion = dotNetVersion
                                     }
                                 },
 
@@ -69,6 +76,30 @@ namespace STX.EFCore.Client.Infrastructure.Services
                                 new DotNetBuildTask
                                 {
                                     Name = "Build"
+                                },
+
+                                new GithubTask
+                                {
+                                    Name = "Install EF Tools",
+                                    Run = "dotnet tool install --global dotnet-ef"
+                                },
+
+                                new GithubTask
+                                {
+                                    Name = "Deploy Acceptance Database",
+                                    Run =
+                                        $"dotnet ef database update " +
+                                        $"--project {acceptanceTestProjectName}/{acceptanceTestProjectName}.csproj " +
+                                        $"--startup-project {acceptanceTestProjectName}/{acceptanceTestProjectName}.csproj"
+                                },
+
+                                new GithubTask
+                                {
+                                    Name = "Deploy Integration Database",
+                                    Run =
+                                        $"dotnet ef database update " +
+                                        $"--project {integrationTestProjectName}/{integrationTestProjectName}.csproj " +
+                                        $"--startup-project {integrationTestProjectName}/{integrationTestProjectName}.csproj"
                                 },
 
                                 new TestTask
@@ -92,9 +123,10 @@ namespace STX.EFCore.Client.Infrastructure.Services
                     },
                     {
                         "publish",
-                        new PublishJob(
+                        new PublishJobV2(
                             runsOn: BuildMachines.UbuntuLatest,
                             dependsOn: "add_tag",
+                            dotNetVersion: dotNetVersion,
                             nugetApiKey: "${{ secrets.NUGET_ACCESS }}")
                         {
                             Name = "Publish to NuGet"
