@@ -12,6 +12,80 @@ on:
     branches:
     - main
 jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Apply Label
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: >-
+          const prefixes = [
+            'INFRA:',
+            'PROVISIONS:',
+            'RELEASES:',
+            'DATA:',
+            'BROKERS:',
+            'FOUNDATIONS:',
+            'PROCESSINGS:',
+            'ORCHESTRATIONS:',
+            'COORDINATIONS:',
+            'MANAGEMENTS:',
+            'AGGREGATIONS:',
+            'CONTROLLERS:',
+            'CLIENTS:',
+            'EXPOSERS:',
+            'PROVIDERS:',
+            'BASE:',
+            'COMPONENTS:',
+            'VIEWS:',
+            'PAGES:',
+            'ACCEPTANCE:',
+            'INTEGRATIONS:',
+            'CODE RUB:',
+            'MINOR FIX:',
+            'MEDIUM FIX:',
+            'MAJOR FIX:',
+            'DOCUMENTATION:',
+            'CONFIG:',
+            'STANDARD:',
+            'DESIGN:',
+            'BUSINESS:'
+          ];
+
+
+          const pullRequest = context.payload.pull_request;
+
+
+          if (!pullRequest) {
+            console.log('No pull request context available.');
+            return;
+          }
+
+
+          const title = context.payload.pull_request.title;
+
+          const existingLabels = context.payload.pull_request.labels.map(label => label.name);
+
+
+          for (const prefix of prefixes) {
+            if (title.startsWith(prefix)) {
+              const label = prefix.slice(0, -1);
+              if (!existingLabels.includes(label)) {
+                console.log(`Applying label: ${label}`);
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.pull_request.number,
+                  labels: [label]
+                });
+              }
+              break;
+            }
+          }
+    permissions:
+      contents: read
+      pull-requests: write
   build:
     name: Build
     runs-on: windows-latest
@@ -21,11 +95,17 @@ jobs:
     - name: Setup .Net
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 8.0.302
+        dotnet-version: 9.0.100
     - name: Restore
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
+    - name: Install EF Tools
+      run: dotnet tool install --global dotnet-ef
+    - name: Deploy Acceptance Database
+      run: dotnet ef database update --project STX.EFCore.Client.Tests.Acceptance/STX.EFCore.Client.Tests.Acceptance.csproj --startup-project STX.EFCore.Client.Tests.Acceptance/STX.EFCore.Client.Tests.Acceptance.csproj
+    - name: Deploy Integration Database
+      run: dotnet ef database update --project STX.EFCore.Client.Tests.Integrations/STX.EFCore.Client.Tests.Integrations.csproj --startup-project STX.EFCore.Client.Tests.Integrations/STX.EFCore.Client.Tests.Integrations.csproj
     - name: Test
       run: dotnet test --no-build --verbosity normal
   add_tag:
@@ -111,6 +191,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.PAT_FOR_TAGGING }}
   publish:
+    name: Publish to NuGet
     runs-on: ubuntu-latest
     needs:
     - add_tag
@@ -121,7 +202,7 @@ jobs:
     - name: Setup .Net
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 7.0.201
+        dotnet-version: 9.0.100
     - name: Restore
       run: dotnet restore
     - name: Build
