@@ -12,9 +12,9 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageIcon>Operations.png</PackageIcon>
-		<Version>1.0.0.0</Version>
-		<AssemblyVersion>1.0.0.0</AssemblyVersion>
-		<FileVersion>1.0.0.0</FileVersion>
+		<Version>2.0.0.0</Version>
+		<AssemblyVersion>2.0.0.0</AssemblyVersion>
+		<FileVersion>2.0.0.0</FileVersion>
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<PackageLicenseExpression></PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/cjdutoit/STX.EFCore.Client</PackageProjectUrl>
@@ -24,7 +24,7 @@
 		<RepositoryType>Github</RepositoryType>
 		<PackageTags> EF, Entity Framework, Operations, C#, The Standard, Client </PackageTags>
 		<PackageReleaseNotes>
-			Initial release of the client.
+			Upgrade to .NET 9.0 and EF Core 9.0
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
