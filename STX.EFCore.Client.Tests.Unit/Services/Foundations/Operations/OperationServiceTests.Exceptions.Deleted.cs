@@ -46,7 +46,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                     Times.Once);
 
             storageBrokerMock.Verify(broker =>
-                broker.SaveChangesAsync(),
+                broker.SaveChangesAsync(default),
                     Times.Never);
 
             storageBrokerMock.VerifyNoOtherCalls();

@@ -51,7 +51,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             IEnumerable<User> inputUsers = randomUsers;
 
             storageBrokerMock.Setup(broker =>
-                broker.BeginTransactionAsync())
+                broker.BeginTransactionAsync(default))
                     .ReturnsAsync(dbContextTransactionMock.Object);
 
             // When
@@ -59,15 +59,15 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
 
             // Then
             storageBrokerMock.Verify(broker =>
-                broker.BeginTransactionAsync(),
+                broker.BeginTransactionAsync(default),
                     Times.Once);
 
             storageBrokerMock.Verify(broker =>
-                broker.BulkInsertAsync(inputUsers),
+                broker.BulkInsertAsync(inputUsers, default),
                     Times.Once);
 
             storageBrokerMock.Verify(broker =>
-                broker.SaveChangesAsync(),
+                broker.SaveChangesAsync(default),
                     Times.Once);
 
             dbContextTransactionMock.Verify(transaction =>

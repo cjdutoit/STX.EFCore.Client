@@ -37,7 +37,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             entityTypeMock.Setup(et => et.FindPrimaryKey()).Returns(primaryKeyMock.Object);
 
             storageBrokerMock.Setup(broker =>
-                broker.FindEntityType<User>())
+                broker.FindEntityTypeAsync<User>())
                     .ReturnsAsync(entityTypeMock.Object);
 
             storageBrokerMock.Setup(broker =>
@@ -51,7 +51,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             actualUsers.Should().BeEquivalentTo(expectedUsers);
 
             storageBrokerMock.Verify(broker =>
-                broker.FindEntityType<User>(),
+                broker.FindEntityTypeAsync<User>(),
                     Times.Once);
 
             storageBrokerMock.Verify(broker =>

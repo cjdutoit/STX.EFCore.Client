@@ -26,11 +26,11 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
 
             // Then
             storageBrokerMock.Verify(broker =>
-                broker.BulkUpdateAsync(updatedUsers),
+                broker.BulkUpdateAsync(updatedUsers, default),
                     Times.Once);
 
             storageBrokerMock.Verify(broker =>
-                broker.SaveChangesAsync(),
+                broker.SaveChangesAsync(default),
                     Times.Once);
 
             foreach (var user in updatedUsers)
@@ -52,7 +52,7 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             IEnumerable<User> updatedUsers = randomUsers.DeepClone();
 
             storageBrokerMock.Setup(broker =>
-                broker.BeginTransactionAsync())
+                broker.BeginTransactionAsync(default))
                     .ReturnsAsync(dbContextTransactionMock.Object);
 
             // When
@@ -60,15 +60,15 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
 
             // Then
             storageBrokerMock.Verify(broker =>
-                broker.BeginTransactionAsync(),
+                broker.BeginTransactionAsync(default),
                     Times.Once);
 
             storageBrokerMock.Verify(broker =>
-                broker.BulkUpdateAsync(updatedUsers),
+                broker.BulkUpdateAsync(updatedUsers, default),
                     Times.Once);
 
             storageBrokerMock.Verify(broker =>
-                broker.SaveChangesAsync(),
+                broker.SaveChangesAsync(default),
                     Times.Once);
 
             dbContextTransactionMock.Verify(transaction =>

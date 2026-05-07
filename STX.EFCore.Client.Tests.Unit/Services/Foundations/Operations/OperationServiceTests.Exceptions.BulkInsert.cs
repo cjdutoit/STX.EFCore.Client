@@ -26,11 +26,11 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             Exception expectedException = someException.DeepClone();
 
             storageBrokerMock.Setup(broker =>
-                broker.BeginTransactionAsync())
+                broker.BeginTransactionAsync(default))
                     .ReturnsAsync(dbContextTransactionMock.Object);
 
             storageBrokerMock.Setup(broker =>
-                broker.BulkInsertAsync(It.IsAny<IEnumerable<User>>()))
+                broker.BulkInsertAsync(It.IsAny<IEnumerable<User>>(), default))
                     .ThrowsAsync(someException);
 
             // When
@@ -41,11 +41,11 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             actualException.Message.Should().BeEquivalentTo(expectedException.Message);
 
             storageBrokerMock.Verify(broker =>
-                broker.BeginTransactionAsync(),
+                broker.BeginTransactionAsync(default),
                     Times.Once);
 
             storageBrokerMock.Verify(broker =>
-                broker.BulkInsertAsync(newUsers),
+                broker.BulkInsertAsync(newUsers, default),
                     Times.Once);
 
             dbContextTransactionMock.Verify(transaction =>

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using STX.EFCore.Client.Brokers.Storages;
@@ -22,12 +23,13 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             this.storageBroker = storageBroker;
         }
 
-        public async ValueTask<T> InsertAsync<T>(T @object) where T : class
+        public async ValueTask<T> InsertAsync<T>(T @object, CancellationToken cancellationToken = default) where T
+            : class
         {
             try
             {
                 await storageBroker.UpdateObjectStateAsync(@object, EntityState.Added);
-                await storageBroker.SaveChangesAsync();
+                await storageBroker.SaveChangesAsync(cancellationToken);
 
                 return @object;
             }
@@ -41,18 +43,22 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             }
         }
 
-        public async ValueTask<IQueryable<T>> SelectAllAsync<T>() where T : class =>
+        public async ValueTask<IQueryable<T>> SelectAllAsync<T>(CancellationToken cancellationToken = default) where T
+            : class =>
             await storageBroker.SelectAllAsync<T>();
 
         public async ValueTask<T> SelectAsync<T>(params object[] objectIds) where T : class =>
             await storageBroker.SelectAsync<T>(objectIds);
 
-        public async ValueTask<T> UpdateAsync<T>(T @object) where T : class
+        public async ValueTask<T> SelectAsync<T>(object[] objectIds, CancellationToken cancellationToken) where T : class =>
+            await storageBroker.SelectAsync<T>(objectIds, cancellationToken);
+
+        public async ValueTask<T> UpdateAsync<T>(T @object, CancellationToken cancellationToken = default) where T : class
         {
             try
             {
                 await storageBroker.UpdateObjectStateAsync(@object, EntityState.Modified);
-                await storageBroker.SaveChangesAsync();
+                await storageBroker.SaveChangesAsync(cancellationToken);
 
                 return @object;
             }
@@ -66,12 +72,12 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             }
         }
 
-        public async ValueTask<T> DeleteAsync<T>(T @object) where T : class
+        public async ValueTask<T> DeleteAsync<T>(T @object, CancellationToken cancellationToken = default) where T : class
         {
             try
             {
                 await storageBroker.UpdateObjectStateAsync(@object, EntityState.Deleted);
-                await storageBroker.SaveChangesAsync();
+                await storageBroker.SaveChangesAsync(cancellationToken);
 
                 return @object;
             }
@@ -85,21 +91,24 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             }
         }
 
-        public async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects, bool useTransaction = true) where T : class
+        public async ValueTask BulkInsertAsync<T>(
+            IEnumerable<T> objects,
+            bool useTransaction = true,
+            CancellationToken cancellationToken = default) where T : class
         {
             if (useTransaction)
             {
-                using var transaction = await storageBroker.BeginTransactionAsync();
+                using var transaction = await storageBroker.BeginTransactionAsync(cancellationToken);
 
                 try
                 {
-                    await storageBroker.BulkInsertAsync(objects);
-                    await storageBroker.SaveChangesAsync();
-                    await transaction.CommitAsync();
+                    await storageBroker.BulkInsertAsync(objects, cancellationToken);
+                    await storageBroker.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                 }
                 catch
                 {
-                    await transaction.RollbackAsync();
+                    await transaction.RollbackAsync(cancellationToken);
                     throw;
                 }
                 finally
@@ -114,8 +123,8 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             {
                 try
                 {
-                    await storageBroker.BulkInsertAsync(objects);
-                    await storageBroker.SaveChangesAsync();
+                    await storageBroker.BulkInsertAsync(objects, cancellationToken);
+                    await storageBroker.SaveChangesAsync(cancellationToken);
                 }
                 catch
                 {
@@ -131,9 +140,11 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             }
         }
 
-        public async ValueTask<IEnumerable<T>> BulkReadAsync<T>(IEnumerable<T> objects) where T : class
+        public async ValueTask<IEnumerable<T>> BulkReadAsync<T>(
+            IEnumerable<T> objects,
+            CancellationToken cancellationToken = default) where T : class
         {
-            var entityType = await this.storageBroker.FindEntityType<T>();
+            var entityType = await this.storageBroker.FindEntityTypeAsync<T>();
             var keyProperty = entityType?.FindPrimaryKey()?.Properties?.FirstOrDefault();
 
             if (keyProperty == null)
@@ -170,21 +181,21 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
         }
 
 
-        public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects, bool useTransaction = true) where T : class
+        public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects, bool useTransaction = true, CancellationToken cancellationToken = default) where T : class
         {
             if (useTransaction)
             {
-                using var transaction = await storageBroker.BeginTransactionAsync();
+                using var transaction = await storageBroker.BeginTransactionAsync(cancellationToken);
 
                 try
                 {
-                    await storageBroker.BulkUpdateAsync(objects);
-                    await storageBroker.SaveChangesAsync();
-                    await transaction.CommitAsync();
+                    await storageBroker.BulkUpdateAsync(objects, cancellationToken);
+                    await storageBroker.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                 }
                 catch
                 {
-                    await transaction.RollbackAsync();
+                    await transaction.RollbackAsync(cancellationToken);
                     throw;
                 }
                 finally
@@ -199,8 +210,8 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             {
                 try
                 {
-                    await storageBroker.BulkUpdateAsync(objects);
-                    await storageBroker.SaveChangesAsync();
+                    await storageBroker.BulkUpdateAsync(objects, cancellationToken);
+                    await storageBroker.SaveChangesAsync(cancellationToken);
                 }
                 catch
                 {
@@ -216,21 +227,21 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             }
         }
 
-        public async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects, bool useTransaction = true) where T : class
+        public async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects, bool useTransaction = true, CancellationToken cancellationToken = default) where T : class
         {
             if (useTransaction)
             {
-                using var transaction = await storageBroker.BeginTransactionAsync();
+                using var transaction = await storageBroker.BeginTransactionAsync(cancellationToken);
 
                 try
                 {
-                    await storageBroker.BulkDeleteAsync(objects);
-                    await storageBroker.SaveChangesAsync();
-                    await transaction.CommitAsync();
+                    await storageBroker.BulkDeleteAsync(objects, cancellationToken);
+                    await storageBroker.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
                 }
                 catch
                 {
-                    await transaction.RollbackAsync();
+                    await transaction.RollbackAsync(cancellationToken);
                     throw;
                 }
                 finally
@@ -245,8 +256,8 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             {
                 try
                 {
-                    await storageBroker.BulkDeleteAsync(objects);
-                    await storageBroker.SaveChangesAsync();
+                    await storageBroker.BulkDeleteAsync(objects, cancellationToken);
+                    await storageBroker.SaveChangesAsync(cancellationToken);
                 }
                 catch
                 {
