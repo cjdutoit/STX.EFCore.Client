@@ -8,6 +8,7 @@ using FluentAssertions;
 using Force.DeepCloner;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using STX.EFCore.Client.Models.Foundations.Operations.Exceptions;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
 namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
@@ -22,7 +23,16 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             User inputUser = randomUser;
             User expectedUser = inputUser.DeepClone();
             Exception errorException = new Exception("Database error");
-            Exception expectedException = errorException.DeepClone();
+
+            var failedOperationServiceException =
+                new FailedOperationServiceException(
+                    message: "Unexpected operation service error occurred. Contact support.",
+                    innerException: errorException);
+
+            var expectedOperationServiceException =
+                new OperationServiceException(
+                    message: "Operation service error occurred, contact support.",
+                    innerException: failedOperationServiceException);
 
             storageBrokerMock.Setup(broker =>
                 broker.UpdateObjectStateAsync(inputUser, EntityState.Added))
@@ -31,11 +41,11 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             // When
             ValueTask<User> insertUserTask = operationService.InsertAsync(@object: inputUser);
 
-            Exception actualException =
-                await Assert.ThrowsAsync<Exception>(testCode: insertUserTask.AsTask);
+            OperationServiceException actualException =
+                await Assert.ThrowsAsync<OperationServiceException>(testCode: insertUserTask.AsTask);
 
             // Then
-            actualException.Message.Should().BeEquivalentTo(expectedException.Message);
+            actualException.Should().BeEquivalentTo(expectedOperationServiceException);
 
             storageBrokerMock.Verify(broker =>
                 broker.UpdateObjectStateAsync(inputUser, EntityState.Added),

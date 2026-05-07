@@ -9,6 +9,7 @@ using FluentAssertions;
 using Force.DeepCloner;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using STX.EFCore.Client.Models.Foundations.Operations.Exceptions;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
 namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
@@ -23,7 +24,16 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             IEnumerable<User> randomUsers = CreateRandomUsers();
             IEnumerable<User> deleteUsers = randomUsers;
             Exception someException = new Exception(message: GetRandomString());
-            Exception expectedException = someException.DeepClone();
+
+            var failedOperationServiceException =
+                new FailedOperationServiceException(
+                    message: "Unexpected operation service error occurred. Contact support.",
+                    innerException: someException);
+
+            var expectedOperationServiceException =
+                new OperationServiceException(
+                    message: "Operation service error occurred, contact support.",
+                    innerException: failedOperationServiceException);
 
             storageBrokerMock.Setup(broker =>
                 broker.BeginTransactionAsync(default))
@@ -35,10 +45,12 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
 
             // When
             ValueTask deleteUserTask = operationService.BulkDeleteAsync(objects: deleteUsers, useTransaction);
-            Exception actualException = await Assert.ThrowsAsync<Exception>(testCode: deleteUserTask.AsTask);
+
+            OperationServiceException actualException =
+                await Assert.ThrowsAsync<OperationServiceException>(testCode: deleteUserTask.AsTask);
 
             // Then
-            actualException.Message.Should().BeEquivalentTo(expectedException.Message);
+            actualException.Should().BeEquivalentTo(expectedOperationServiceException);
 
             storageBrokerMock.Verify(broker =>
                 broker.BeginTransactionAsync(default),

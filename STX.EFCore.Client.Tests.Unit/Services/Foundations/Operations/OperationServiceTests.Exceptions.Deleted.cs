@@ -8,6 +8,7 @@ using FluentAssertions;
 using Force.DeepCloner;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using STX.EFCore.Client.Models.Foundations.Operations.Exceptions;
 using STX.EFCore.Client.Tests.Unit.Models.Foundations.Users;
 
 namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
@@ -22,20 +23,29 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             User deleteUser = randomUser;
             User expectedUser = deleteUser.DeepClone();
             Exception errorException = new Exception("Database error");
-            Exception expectedException = errorException.DeepClone();
+
+            var failedOperationServiceException =
+                new FailedOperationServiceException(
+                    message: "Unexpected operation service error occurred. Contact support.",
+                    innerException: errorException);
+
+            var expectedOperationServiceException =
+                new OperationServiceException(
+                    message: "Operation service error occurred, contact support.",
+                    innerException: failedOperationServiceException);
 
             storageBrokerMock.Setup(broker =>
                 broker.UpdateObjectStateAsync(deleteUser, EntityState.Deleted))
                     .ThrowsAsync(errorException);
 
             // When
-            ValueTask<User> insertUserTask = operationService.DeleteAsync(@object: deleteUser);
+            ValueTask<User> deleteUserTask = operationService.DeleteAsync(@object: deleteUser);
 
-            Exception actualException =
-                await Assert.ThrowsAsync<Exception>(testCode: insertUserTask.AsTask);
+            OperationServiceException actualException =
+                await Assert.ThrowsAsync<OperationServiceException>(testCode: deleteUserTask.AsTask);
 
             // Then
-            actualException.Message.Should().BeEquivalentTo(expectedException.Message);
+            actualException.Should().BeEquivalentTo(expectedOperationServiceException);
 
             storageBrokerMock.Verify(broker =>
                 broker.UpdateObjectStateAsync(deleteUser, EntityState.Deleted),
@@ -50,7 +60,6 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
                     Times.Never);
 
             storageBrokerMock.VerifyNoOtherCalls();
-
         }
     }
 }

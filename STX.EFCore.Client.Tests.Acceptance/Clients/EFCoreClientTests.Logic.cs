@@ -67,7 +67,7 @@ namespace STX.EFCore.Client.Tests.Acceptance.Clients
             await efCoreClient.InsertAsync(inputUser);
 
             // When
-            User actualUser = await efCoreClient.SelectAsync<User>(inputUser.Id);
+            User actualUser = await efCoreClient.SelectAsync<User>(new object[] { inputUser.Id });
 
             // Then
             actualUser.Should().BeEquivalentTo(expectedUser);
@@ -92,7 +92,7 @@ namespace STX.EFCore.Client.Tests.Acceptance.Clients
 
             // Then
             actualUser.Should().BeEquivalentTo(expectedUser);
-            User userInDatabase = await efCoreClient.SelectAsync<User>(inputUser.Id);
+            User userInDatabase = await efCoreClient.SelectAsync<User>(new object[] { inputUser.Id });
             userInDatabase.Should().BeNull();
         }
 

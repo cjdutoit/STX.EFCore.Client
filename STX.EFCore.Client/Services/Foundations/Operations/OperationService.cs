@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +13,7 @@ using STX.EFCore.Client.Brokers.Storages;
 
 namespace STX.EFCore.Client.Services.Foundations.Operations
 {
-    internal class OperationService : IOperationService
+    internal partial class OperationService : IOperationService
     {
         private readonly IStorageBroker storageBroker;
 
@@ -23,254 +22,268 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             this.storageBroker = storageBroker;
         }
 
-        public async ValueTask<T> InsertAsync<T>(T @object, CancellationToken cancellationToken = default) where T
-            : class
-        {
-            try
-            {
-                await storageBroker.UpdateObjectStateAsync(@object, EntityState.Added);
-                await storageBroker.SaveChangesAsync(cancellationToken);
-
-                return @object;
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
-            }
-        }
-
-        public async ValueTask<IQueryable<T>> SelectAllAsync<T>(CancellationToken cancellationToken = default) where T
+        public ValueTask<T> InsertAsync<T>(T @object, CancellationToken cancellationToken = default) where T
             : class =>
-            await storageBroker.SelectAllAsync<T>();
-
-        public async ValueTask<T> SelectAsync<T>(params object[] objectIds) where T : class =>
-            await storageBroker.SelectAsync<T>(objectIds);
-
-        public async ValueTask<T> SelectAsync<T>(object[] objectIds, CancellationToken cancellationToken) where T : class =>
-            await storageBroker.SelectAsync<T>(objectIds, cancellationToken);
-
-        public async ValueTask<T> UpdateAsync<T>(T @object, CancellationToken cancellationToken = default) where T : class
-        {
-            try
+            TryCatch(async () =>
             {
-                await storageBroker.UpdateObjectStateAsync(@object, EntityState.Modified);
-                await storageBroker.SaveChangesAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateObjectIsNotNull(@object);
 
-                return @object;
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
-            }
-        }
+                try
+                {
+                    await storageBroker.UpdateObjectStateAsync(@object, EntityState.Added);
+                    await storageBroker.SaveChangesAsync(cancellationToken);
 
-        public async ValueTask<T> DeleteAsync<T>(T @object, CancellationToken cancellationToken = default) where T : class
-        {
-            try
-            {
-                await storageBroker.UpdateObjectStateAsync(@object, EntityState.Deleted);
-                await storageBroker.SaveChangesAsync(cancellationToken);
+                    return @object;
+                }
+                finally
+                {
+                    await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                }
+            });
 
-                return @object;
-            }
-            catch (Exception)
+        public ValueTask<IQueryable<T>> SelectAllAsync<T>(CancellationToken cancellationToken = default)
+            where T : class =>
+            TryCatch(async () =>
             {
-                throw;
-            }
-            finally
-            {
-                await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
-            }
-        }
+                cancellationToken.ThrowIfCancellationRequested();
 
-        public async ValueTask BulkInsertAsync<T>(
+                return await storageBroker.SelectAllAsync<T>();
+            });
+
+        public ValueTask<T> SelectAsync<T>(object[] objectIds, CancellationToken cancellationToken = default)
+            where T : class =>
+            TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateObjectIdsIsNotNull(objectIds);
+
+                return await storageBroker.SelectAsync<T>(objectIds, cancellationToken);
+            });
+
+        public ValueTask<T> UpdateAsync<T>(T @object, CancellationToken cancellationToken = default)
+            where T : class =>
+            TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateObjectIsNotNull(@object);
+
+                try
+                {
+                    await storageBroker.UpdateObjectStateAsync(@object, EntityState.Modified);
+                    await storageBroker.SaveChangesAsync(cancellationToken);
+
+                    return @object;
+                }
+                finally
+                {
+                    await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                }
+            });
+
+        public ValueTask<T> DeleteAsync<T>(T @object, CancellationToken cancellationToken = default)
+            where T : class =>
+            TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateObjectIsNotNull(@object);
+
+                try
+                {
+                    await storageBroker.UpdateObjectStateAsync(@object, EntityState.Deleted);
+                    await storageBroker.SaveChangesAsync(cancellationToken);
+
+                    return @object;
+                }
+                finally
+                {
+                    await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                }
+            });
+
+        public ValueTask BulkInsertAsync<T>(
             IEnumerable<T> objects,
             bool useTransaction = true,
-            CancellationToken cancellationToken = default) where T : class
-        {
-            if (useTransaction)
+            CancellationToken cancellationToken = default) where T : class =>
+            TryCatch(async () =>
             {
-                using var transaction = await storageBroker.BeginTransactionAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateCollectionIsNotNull(objects);
 
-                try
+                if (useTransaction)
                 {
-                    await storageBroker.BulkInsertAsync(objects, cancellationToken);
-                    await storageBroker.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                }
-                catch
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    throw;
-                }
-                finally
-                {
-                    foreach (var @object in objects)
+                    using var transaction = await storageBroker.BeginTransactionAsync(cancellationToken);
+
+                    try
                     {
-                        await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                        await storageBroker.BulkInsertAsync(objects, cancellationToken);
+                        await storageBroker.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
+                    }
+                    catch
+                    {
+                        await transaction.RollbackAsync(cancellationToken);
+                        throw;
+                    }
+                    finally
+                    {
+                        foreach (var @object in objects)
+                        {
+                            await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                        }
                     }
                 }
-            }
-            else
-            {
-                try
+                else
                 {
-                    await storageBroker.BulkInsertAsync(objects, cancellationToken);
-                    await storageBroker.SaveChangesAsync(cancellationToken);
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    foreach (var @object in objects)
+                    try
                     {
-                        await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                        await storageBroker.BulkInsertAsync(objects, cancellationToken);
+                        await storageBroker.SaveChangesAsync(cancellationToken);
+                    }
+                    finally
+                    {
+                        foreach (var @object in objects)
+                        {
+                            await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                        }
                     }
                 }
-            }
-        }
+            });
 
-        public async ValueTask<IEnumerable<T>> BulkReadAsync<T>(
+        public ValueTask<IEnumerable<T>> BulkReadAsync<T>(
             IEnumerable<T> objects,
-            CancellationToken cancellationToken = default) where T : class
-        {
-            var entityType = await this.storageBroker.FindEntityTypeAsync<T>();
-            var keyProperty = entityType?.FindPrimaryKey()?.Properties?.FirstOrDefault();
-
-            if (keyProperty == null)
+            CancellationToken cancellationToken = default) where T : class =>
+            TryCatch((ReturningCollectionFunction<T>)(async () =>
             {
-                throw new InvalidOperationException($"No primary key defined for entity {typeof(T).Name}");
-            }
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateCollectionIsNotNull(objects);
 
-            var keyType = keyProperty.ClrType;
+                var entityType = await this.storageBroker.FindEntityTypeAsync<T>();
+                var keyProperty = entityType?.FindPrimaryKey()?.Properties?.FirstOrDefault();
 
-            var keyValues = objects
-                .Select(obj => keyProperty.PropertyInfo.GetValue(obj))
-                .Where(key => key != null)
-                .ToList();
+                if (keyProperty == null)
+                {
+                    throw new InvalidOperationException($"No primary key defined for entity {typeof(T).Name}");
+                }
 
-            var castedKeyValues = typeof(Enumerable)
-                .GetMethod(name: "Cast", bindingAttr: BindingFlags.Static | BindingFlags.Public)
-                .MakeGenericMethod(typeArguments: keyType)
-                .Invoke(obj: null, parameters: new object[] { keyValues });
+                var keyValues = objects
+                    .Select(obj => keyProperty.PropertyInfo.GetValue(obj))
+                    .Where(key => key != null)
+                    .ToList();
 
-            var listOfKeyValues = keyValues.Cast<object>().ToList();
-            var parameter = Expression.Parameter(type: typeof(T), name: "e");
-            var property = Expression.Property(expression: parameter, propertyName: keyProperty.Name);
-            var containsMethod = typeof(List<object>).GetMethod("Contains");
+                var listOfKeyValues = keyValues.Cast<object>().ToList();
+                var parameter = Expression.Parameter(type: typeof(T), name: "e");
+                var property = Expression.Property(expression: parameter, propertyName: keyProperty.Name);
+                var containsMethod = typeof(List<object>).GetMethod("Contains");
 
-            var body = Expression.Call(
-                instance: Expression.Constant(listOfKeyValues),
-                method: containsMethod,
-                arguments: Expression.Convert(property, typeof(object)));
+                var body = Expression.Call(
+                    instance: Expression.Constant(listOfKeyValues),
+                    method: containsMethod,
+                    arguments: Expression.Convert(property, typeof(object)));
 
-            var predicate = Expression.Lambda<Func<T, bool>>(body, parameter);
-            var query = await storageBroker.SelectAllAsync<T>();
+                var predicate = Expression.Lambda<Func<T, bool>>(body, parameter);
+                var query = await storageBroker.SelectAllAsync<T>();
 
-            return query.Where(predicate).ToList();
-        }
+                return (IEnumerable<T>)query.Where(predicate).ToList();
+            }));
 
 
-        public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects, bool useTransaction = true, CancellationToken cancellationToken = default) where T : class
-        {
-            if (useTransaction)
+        public ValueTask BulkUpdateAsync<T>(
+            IEnumerable<T> objects,
+            bool useTransaction = true,
+            CancellationToken cancellationToken = default) where T : class =>
+            TryCatch(async () =>
             {
-                using var transaction = await storageBroker.BeginTransactionAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateCollectionIsNotNull(objects);
 
-                try
+                if (useTransaction)
                 {
-                    await storageBroker.BulkUpdateAsync(objects, cancellationToken);
-                    await storageBroker.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                }
-                catch
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    throw;
-                }
-                finally
-                {
-                    foreach (var @object in objects)
+                    using var transaction = await storageBroker.BeginTransactionAsync(cancellationToken);
+
+                    try
                     {
-                        await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                        await storageBroker.BulkUpdateAsync(objects, cancellationToken);
+                        await storageBroker.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
+                    }
+                    catch
+                    {
+                        await transaction.RollbackAsync(cancellationToken);
+                        throw;
+                    }
+                    finally
+                    {
+                        foreach (var @object in objects)
+                        {
+                            await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                        }
                     }
                 }
-            }
-            else
-            {
-                try
+                else
                 {
-                    await storageBroker.BulkUpdateAsync(objects, cancellationToken);
-                    await storageBroker.SaveChangesAsync(cancellationToken);
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    foreach (var @object in objects)
+                    try
                     {
-                        await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                        await storageBroker.BulkUpdateAsync(objects, cancellationToken);
+                        await storageBroker.SaveChangesAsync(cancellationToken);
+                    }
+                    finally
+                    {
+                        foreach (var @object in objects)
+                        {
+                            await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                        }
                     }
                 }
-            }
-        }
+            });
 
-        public async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects, bool useTransaction = true, CancellationToken cancellationToken = default) where T : class
-        {
-            if (useTransaction)
+        public ValueTask BulkDeleteAsync<T>(
+            IEnumerable<T> objects,
+            bool useTransaction = true,
+            CancellationToken cancellationToken = default) where T : class =>
+            TryCatch(async () =>
             {
-                using var transaction = await storageBroker.BeginTransactionAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateCollectionIsNotNull(objects);
 
-                try
+                if (useTransaction)
                 {
-                    await storageBroker.BulkDeleteAsync(objects, cancellationToken);
-                    await storageBroker.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                }
-                catch
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    throw;
-                }
-                finally
-                {
-                    foreach (var @object in objects)
+                    using var transaction = await storageBroker.BeginTransactionAsync(cancellationToken);
+
+                    try
                     {
-                        await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                        await storageBroker.BulkDeleteAsync(objects, cancellationToken);
+                        await storageBroker.SaveChangesAsync(cancellationToken);
+                        await transaction.CommitAsync(cancellationToken);
+                    }
+                    catch
+                    {
+                        await transaction.RollbackAsync(cancellationToken);
+                        throw;
+                    }
+                    finally
+                    {
+                        foreach (var @object in objects)
+                        {
+                            await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                        }
                     }
                 }
-            }
-            else
-            {
-                try
+                else
                 {
-                    await storageBroker.BulkDeleteAsync(objects, cancellationToken);
-                    await storageBroker.SaveChangesAsync(cancellationToken);
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    foreach (var @object in objects)
+                    try
                     {
-                        await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                        await storageBroker.BulkDeleteAsync(objects, cancellationToken);
+                        await storageBroker.SaveChangesAsync(cancellationToken);
+                    }
+                    finally
+                    {
+                        foreach (var @object in objects)
+                        {
+                            await storageBroker.UpdateObjectStateAsync(@object, EntityState.Detached);
+                        }
                     }
                 }
-            }
-        }
+            });
     }
 }
