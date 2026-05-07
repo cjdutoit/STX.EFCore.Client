@@ -81,7 +81,7 @@ namespace STX.EFCore.Client.Infrastructure.Services
                                 new GithubTask
                                 {
                                     Name = "Install EF Tools",
-                                    Run = "dotnet tool install --global dotnet-ef"
+                                    Run = "dotnet tool restore"
                                 },
 
                                 new GithubTask
