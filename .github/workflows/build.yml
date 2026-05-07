@@ -95,17 +95,17 @@ jobs:
     - name: Setup .Net
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 9.0.100
+        dotnet-version: 10.x
     - name: Restore
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
     - name: Install EF Tools
-      run: dotnet tool install --global dotnet-ef
+      run: dotnet tool restore
     - name: Deploy Acceptance Database
-      run: dotnet ef database update --project STX.EFCore.Client.Tests.Acceptance/STX.EFCore.Client.Tests.Acceptance.csproj --startup-project STX.EFCore.Client.Tests.Acceptance/STX.EFCore.Client.Tests.Acceptance.csproj
+      run: dotnet tool run dotnet-ef database update --project STX.EFCore.Client.Tests.Acceptance/STX.EFCore.Client.Tests.Acceptance.csproj --startup-project STX.EFCore.Client.Tests.Acceptance/STX.EFCore.Client.Tests.Acceptance.csproj
     - name: Deploy Integration Database
-      run: dotnet ef database update --project STX.EFCore.Client.Tests.Integrations/STX.EFCore.Client.Tests.Integrations.csproj --startup-project STX.EFCore.Client.Tests.Integrations/STX.EFCore.Client.Tests.Integrations.csproj
+      run: dotnet tool run dotnet-ef database update --project STX.EFCore.Client.Tests.Integrations/STX.EFCore.Client.Tests.Integrations.csproj --startup-project STX.EFCore.Client.Tests.Integrations/STX.EFCore.Client.Tests.Integrations.csproj
     - name: Test
       run: dotnet test --no-build --verbosity normal
   add_tag:
@@ -202,7 +202,7 @@ jobs:
     - name: Setup .Net
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 9.0.100
+        dotnet-version: 10.x
     - name: Restore
       run: dotnet restore
     - name: Build

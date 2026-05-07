@@ -22,17 +22,17 @@ namespace STX.EFCore.Client.Tests.Unit.Services.Foundations.Operations
             User expectedUser = storageUser.DeepClone();
 
             storageBrokerMock.Setup(broker =>
-                broker.SelectAsync<User>(inputUser.Id))
+                broker.SelectAsync<User>(new object[] { inputUser.Id }, default))
                     .ReturnsAsync(storageUser);
 
             // When
-            User actualUser = await operationService.SelectAsync<User>(objectIds: inputUser.Id);
+            User actualUser = await operationService.SelectAsync<User>(new object[] { inputUser.Id });
 
             // Then
             actualUser.Should().BeEquivalentTo(expectedUser);
 
             storageBrokerMock.Verify(broker =>
-                broker.SelectAsync<User>(inputUser.Id),
+                broker.SelectAsync<User>(new object[] { inputUser.Id }, default),
                     Times.Once);
 
             storageBrokerMock.VerifyNoOtherCalls();

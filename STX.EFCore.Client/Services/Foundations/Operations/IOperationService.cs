@@ -4,20 +4,58 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace STX.EFCore.Client.Services.Foundations.Operations
 {
     internal interface IOperationService
     {
-        ValueTask<T> InsertAsync<T>(T @object) where T : class;
-        ValueTask<IQueryable<T>> SelectAllAsync<T>() where T : class;
-        ValueTask<T> SelectAsync<T>(params object[] @objectIds) where T : class;
-        ValueTask<T> UpdateAsync<T>(T @object) where T : class;
-        ValueTask<T> DeleteAsync<T>(T @object) where T : class;
-        ValueTask BulkInsertAsync<T>(IEnumerable<T> objects, bool useTransaction = true) where T : class;
-        ValueTask<IEnumerable<T>> BulkReadAsync<T>(IEnumerable<T> objects) where T : class;
-        ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects, bool useTransaction = true) where T : class;
-        ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects, bool useTransaction = true) where T : class;
+        ValueTask<T> InsertAsync<T>(T @object, CancellationToken cancellationToken = default)
+            where T : class;
+
+        ValueTask<IQueryable<T>> SelectAllAsync<T>(CancellationToken cancellationToken = default)
+            where T : class;
+
+        ValueTask<T> SelectAsync<T>(object[] objectIds, CancellationToken cancellationToken = default)
+            where T : class;
+
+        ValueTask<T> UpdateAsync<T>(T @object, CancellationToken cancellationToken = default)
+            where T : class;
+
+        ValueTask<T> DeleteAsync<T>(T @object, CancellationToken cancellationToken = default)
+            where T : class;
+
+        ValueTask BulkInsertAsync<T>(
+            IEnumerable<T> objects,
+            bool useTransaction = true,
+            CancellationToken cancellationToken = default)
+            where T : class;
+
+        ValueTask<IEnumerable<T>> BulkReadAsync<T>(
+            IEnumerable<T> objects,
+            CancellationToken cancellationToken = default)
+            where T : class;
+
+        ValueTask BulkUpdateAsync<T>(
+            IEnumerable<T> objects,
+            bool useTransaction = true,
+            CancellationToken cancellationToken = default)
+            where T : class;
+
+        ValueTask BulkDeleteAsync<T>(
+            IEnumerable<T> objects,
+            bool useTransaction = true,
+            CancellationToken cancellationToken = default)
+            where T : class;
+
+        ValueTask BulkUpsertAsync<T>(
+            IEnumerable<T> objects,
+            bool useTransaction = true,
+            CancellationToken cancellationToken = default)
+            where T : class;
+
+        ValueTask<bool> ExistsAsync<T>(object[] objectIds, CancellationToken cancellationToken = default)
+            where T : class;
     }
 }

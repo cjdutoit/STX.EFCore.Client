@@ -5,7 +5,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using EFxceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using STX.EFCore.Client.Clients;
@@ -13,7 +12,7 @@ using STX.EFCore.Client.Tests.Integrations.Models.Users;
 
 namespace STX.EFCore.Client.Tests.Integrations.Brokers.Storages
 {
-    public partial class StorageBroker : EFxceptionsContext, IStorageBroker
+    public partial class StorageBroker : DbContext, IStorageBroker
     {
         private readonly IConfiguration configuration;
         private readonly IEFCoreClient efCoreClient;

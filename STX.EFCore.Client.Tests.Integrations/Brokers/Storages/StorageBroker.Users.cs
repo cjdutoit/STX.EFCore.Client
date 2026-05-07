@@ -41,5 +41,11 @@ namespace STX.EFCore.Client.Tests.Integrations.Brokers.Storages
 
         public async ValueTask BulkDeleteUsersAsync(IEnumerable<User> users) =>
             await efCoreClient.BulkDeleteAsync<User>(users);
+
+        public async ValueTask BulkUpsertUsersAsync(IEnumerable<User> users) =>
+            await efCoreClient.BulkUpsertAsync<User>(users);
+
+        public async ValueTask<bool> UserExistsAsync(Guid userId) =>
+            await efCoreClient.ExistsAsync<User>(new object[] { userId });
     }
 }

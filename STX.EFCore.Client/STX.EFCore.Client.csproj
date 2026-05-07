@@ -1,30 +1,34 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
 		<NoWarn>CS1998</NoWarn>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<Title>STX.EFCore.Client</Title>
 		<Authors>Christo du Toit</Authors>
-		<Description> A Standard compliant client to wrap EF Core operations that can be used in a Storage Broker </Description>
+		<Description>A general-purpose EF Core client for common data operations, designed for use in a Storage Broker.</Description>
 		<Copyright>Copyright (c) Christo du Toit</Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageIcon>Operations.png</PackageIcon>
-		<Version>2.0.0.0</Version>
-		<AssemblyVersion>2.0.0.0</AssemblyVersion>
-		<FileVersion>2.0.0.0</FileVersion>
+		<Version>3.0.0</Version>
+		<AssemblyVersion>3.0.0.0</AssemblyVersion>
+		<FileVersion>3.0.0.0</FileVersion>
 		<NeutralLanguage>en-US</NeutralLanguage>
-		<PackageLicenseExpression></PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/cjdutoit/STX.EFCore.Client</PackageProjectUrl>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryUrl>https://github.com/cjdutoit/STX.EFCore.Client</RepositoryUrl>
 		<RepositoryType>Github</RepositoryType>
-		<PackageTags> EF, Entity Framework, Operations, C#, The Standard, Client </PackageTags>
+		<PackageTags>EF;EFCore;EntityFramework;StorageBroker;BulkInsert;BulkUpdate;BulkDelete;BulkUpsert;Operations;CSharp</PackageTags>
 		<PackageReleaseNotes>
-			Upgrade to .NET 9.0 and EF Core 9.0
+			v3.0.0 — Targets .NET 10 and EF Core 10.
+			Adds BulkUpsertAsync and ExistsAsync.
+			Removes exception categorisation — raw EF Core exceptions now propagate directly to the caller.
+			Null argument validation uses ArgumentNullException (standard .NET).
+			This release contains breaking changes — see the README for migration guidance.
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
@@ -53,7 +57,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.7" />
 	</ItemGroup>
 
 </Project>

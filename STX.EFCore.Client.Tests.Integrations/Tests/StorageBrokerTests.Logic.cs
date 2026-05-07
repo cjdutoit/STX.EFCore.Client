@@ -177,5 +177,69 @@ namespace STX.EFCore.Client.Tests.Integrations.Tests
 
             actualUsers.Should().HaveCount(0);
         }
+
+        [Fact]
+        public async Task ShouldBulkUpsertUsersAsync()
+        {
+            // Given
+            int numberOfExistingUsers = GetRandomNumber();
+            int numberOfNewUsers = GetRandomNumber();
+            List<User> existingUsers = CreateRandomUsers(count: numberOfExistingUsers);
+            await storageBroker.BulkInsertUsersAsync(existingUsers);
+
+            List<User> updatedExistingUsers = existingUsers.DeepClone();
+            updatedExistingUsers.ForEach(user => user.Email = GetRandomString());
+
+            List<User> newUsers = CreateRandomUsers(count: numberOfNewUsers);
+            List<User> inputUsers = updatedExistingUsers.Concat(newUsers).ToList();
+            List<Guid> allExpectedIds = inputUsers.Select(u => u.Id).ToList();
+
+            // When
+            await storageBroker.BulkUpsertUsersAsync(inputUsers);
+
+            // Then
+            IQueryable<User> users = await storageBroker.SelectAllUsersAsync();
+
+            List<User> actualUsers = await users
+                .Where(u => allExpectedIds.Contains(u.Id)).ToListAsync();
+
+            actualUsers.Should().HaveCount(inputUsers.Count);
+
+            foreach (User expectedUser in inputUsers)
+            {
+                User actualUser = actualUsers.Single(u => u.Id == expectedUser.Id);
+                actualUser.Should().BeEquivalentTo(expectedUser);
+            }
+
+            await storageBroker.BulkDeleteUsersAsync(actualUsers);
+        }
+
+        [Fact]
+        public async Task ShouldReturnTrueWhenUserExistsAsync()
+        {
+            // Given
+            User randomUser = CreateRandomUser();
+            await storageBroker.InsertUserAsync(randomUser);
+
+            // When
+            bool actualResult = await storageBroker.UserExistsAsync(randomUser.Id);
+
+            // Then
+            actualResult.Should().BeTrue();
+            await storageBroker.DeleteUserAsync(randomUser);
+        }
+
+        [Fact]
+        public async Task ShouldReturnFalseWhenUserDoesNotExistAsync()
+        {
+            // Given
+            Guid nonExistentId = Guid.NewGuid();
+
+            // When
+            bool actualResult = await storageBroker.UserExistsAsync(nonExistentId);
+
+            // Then
+            actualResult.Should().BeFalse();
+        }
     }
 }

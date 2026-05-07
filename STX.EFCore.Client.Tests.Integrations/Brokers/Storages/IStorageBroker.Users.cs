@@ -21,5 +21,7 @@ namespace STX.EFCore.Client.Tests.Integrations.Brokers.Storages
         ValueTask<IEnumerable<User>> BulkReadUsersAsync(IEnumerable<User> users);
         ValueTask BulkUpdateUsersAsync(IEnumerable<User> users);
         ValueTask BulkDeleteUsersAsync(IEnumerable<User> users);
+        ValueTask BulkUpsertUsersAsync(IEnumerable<User> users);
+        ValueTask<bool> UserExistsAsync(Guid userId);
     }
 }

@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="STX.EFCore.Client.Infrastructure/STX.EFCore.Client.Infrastructure.csproj" />
+  <Project Path="STX.EFCore.Client.Tests.Acceptance/STX.EFCore.Client.Tests.Acceptance.csproj" />
+  <Project Path="STX.EFCore.Client.Tests.Integrations/STX.EFCore.Client.Tests.Integrations.csproj" />
+  <Project Path="STX.EFCore.Client.Tests.Unit/STX.EFCore.Client.Tests.Unit.csproj" />
+  <Project Path="STX.EFCore.Client/STX.EFCore.Client.csproj" />
+</Solution>

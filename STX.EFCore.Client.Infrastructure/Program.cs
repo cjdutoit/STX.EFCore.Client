@@ -15,7 +15,7 @@ namespace STX.EFCore.Client.Infrastructure
             scriptGenerationService.GenerateBuildScript(
                 branchName: "main",
                 projectName: "STX.EFCore.Client",
-                dotNetVersion: "9.0.100");
+                dotNetVersion: "10.x");
         }
     }
 }
