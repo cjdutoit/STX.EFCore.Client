@@ -48,5 +48,14 @@ namespace STX.EFCore.Client.Services.Foundations.Operations
             bool useTransaction = true,
             CancellationToken cancellationToken = default)
             where T : class;
+
+        ValueTask BulkUpsertAsync<T>(
+            IEnumerable<T> objects,
+            bool useTransaction = true,
+            CancellationToken cancellationToken = default)
+            where T : class;
+
+        ValueTask<bool> ExistsAsync<T>(object[] objectIds, CancellationToken cancellationToken = default)
+            where T : class;
     }
 }

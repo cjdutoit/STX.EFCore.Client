@@ -195,5 +195,69 @@ namespace STX.EFCore.Client.Tests.Acceptance.Clients
 
             actualUsers.Should().HaveCount(0);
         }
+
+        [Fact]
+        public async Task ShouldBulkUpsertUsersAsync()
+        {
+            // Given
+            int numberOfExistingUsers = GetRandomNumber();
+            int numberOfNewUsers = GetRandomNumber();
+            List<User> existingUsers = CreateRandomUsers(count: numberOfExistingUsers);
+            await efCoreClient.BulkInsertAsync(existingUsers);
+
+            List<User> updatedExistingUsers = existingUsers.DeepClone();
+            updatedExistingUsers.ForEach(user => user.Email = GetRandomString());
+
+            List<User> newUsers = CreateRandomUsers(count: numberOfNewUsers);
+            List<User> inputUsers = updatedExistingUsers.Concat(newUsers).ToList();
+            List<Guid> allExpectedIds = inputUsers.Select(u => u.Id).ToList();
+
+            // When
+            await efCoreClient.BulkUpsertAsync(inputUsers);
+
+            // Then
+            IQueryable<User> users = await efCoreClient.SelectAllAsync<User>();
+
+            List<User> actualUsers = await users
+                .Where(u => allExpectedIds.Contains(u.Id)).ToListAsync();
+
+            actualUsers.Should().HaveCount(inputUsers.Count);
+
+            foreach (User expectedUser in inputUsers)
+            {
+                User actualUser = actualUsers.Single(u => u.Id == expectedUser.Id);
+                actualUser.Should().BeEquivalentTo(expectedUser);
+            }
+
+            await efCoreClient.BulkDeleteAsync(actualUsers);
+        }
+
+        [Fact]
+        public async Task ShouldReturnTrueWhenUserExistsAsync()
+        {
+            // Given
+            User randomUser = CreateRandomUser();
+            await efCoreClient.InsertAsync(randomUser);
+
+            // When
+            bool actualResult = await efCoreClient.ExistsAsync<User>(new object[] { randomUser.Id });
+
+            // Then
+            actualResult.Should().BeTrue();
+            await efCoreClient.DeleteAsync(randomUser);
+        }
+
+        [Fact]
+        public async Task ShouldReturnFalseWhenUserDoesNotExistAsync()
+        {
+            // Given
+            Guid nonExistentId = Guid.NewGuid();
+
+            // When
+            bool actualResult = await efCoreClient.ExistsAsync<User>(new object[] { nonExistentId });
+
+            // Then
+            actualResult.Should().BeFalse();
+        }
     }
 }

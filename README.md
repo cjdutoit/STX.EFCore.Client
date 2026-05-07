@@ -1,6 +1,6 @@
 ﻿# STX.EFCore.Client
 
-A Standard compliant client to wrap EF Core operations that can be used in a Storage Broker.
+A general-purpose EF Core client for common data operations, designed for use in a Storage Broker.
 
 ## Main Features
 
@@ -15,20 +15,38 @@ A Standard compliant client to wrap EF Core operations that can be used in a Sto
 | `BulkReadAsync` | Reads a collection of entities by matching against the provided objects. |
 | `BulkUpdateAsync` | Updates a collection of entities, optionally within a transaction. |
 | `BulkDeleteAsync` | Deletes a collection of entities, optionally within a transaction. |
+| `BulkUpsertAsync` | Inserts new entities and updates existing ones in a single batch, optionally within a transaction. Existence is determined by primary key. |
+| `ExistsAsync` | Returns `true` if an entity with the supplied primary key(s) exists in the data store. |
 
-All methods accept an optional `CancellationToken`. The bulk write operations (`BulkInsertAsync`, `BulkUpdateAsync`, `BulkDeleteAsync`) also accept a `useTransaction` flag (defaults to `true`) that wraps the operation in a database transaction and rolls back automatically on failure.
+All methods accept an optional `CancellationToken`. The bulk write operations (`BulkInsertAsync`, `BulkUpdateAsync`, `BulkDeleteAsync`, `BulkUpsertAsync`) also accept a `useTransaction` flag (defaults to `true`) that wraps the operation in a database transaction and rolls back automatically on failure.
 
-## Exception Model
+## Exception Behaviour
 
-`EFCoreClient` translates lower-level exceptions into three client-level exception categories:
+`EFCoreClient` does not wrap exceptions. All EF Core and .NET exceptions propagate directly to the caller, giving consumers full visibility and control:
 
 | Exception | When thrown |
 |---|---|
-| `EFCoreClientValidationException` | Invalid input (e.g. null object or null collection). |
-| `EFCoreClientDependencyException` | A storage/database error occurred (e.g. `DbUpdateException`). |
-| `EFCoreClientServiceException` | An unexpected service-level error occurred. |
+| `ArgumentNullException` | A required argument (`object`, `objectIds`, or `objects` collection) is `null`. |
+| `DbUpdateException` | The database rejects a write - e.g. unique constraint, foreign key violation, or `NOT NULL` failure. |
+| `DbUpdateConcurrencyException` | A concurrency conflict is detected on update or delete (subclass of `DbUpdateException`). |
+| `InvalidOperationException` | The entity type is not registered in the `DbContext` model, or an incompatible primary key is supplied. |
+| `OperationCanceledException` | The operation was cancelled via the `CancellationToken`. |
 
-`OperationCanceledException` is never wrapped — it propagates directly to the caller.
+## Thread Safety
+
+`EFCoreClient` is **not thread-safe**. All operations on a single instance share the same underlying `DbContext`, which is not designed for concurrent access.
+
+Create one `EFCoreClient` instance **per request or per scope** — not as a singleton. In an ASP.NET Core application this means constructing it inside your scoped `StorageBroker`, which is itself registered as a scoped service:
+
+```cs
+// ✅ Correct — one EFCoreClient per scope via the scoped StorageBroker
+services.AddDbContext<StorageBroker>();  // scoped by default
+
+// ❌ Wrong — a singleton EFCoreClient shared across all requests
+services.AddSingleton<IEFCoreClient>(new EFCoreClient(myDbContext));
+```
+
+This is standard EF Core behaviour. See [DbContext Lifetime, Configuration, and Initialization](https://learn.microsoft.com/en-us/ef/core/dbcontext-configuration/) for details.
 
 ## How do I use this?
 
@@ -182,5 +200,18 @@ public partial class StorageBroker : EFxceptionsContext, IStorageBroker
         CancellationToken cancellationToken = default)
         where T : class =>
             await efCoreClient.BulkDeleteAsync(objects, useTransaction, cancellationToken);
+
+    private async ValueTask BulkUpsertAsync<T>(
+        IEnumerable<T> objects,
+        bool useTransaction = true,
+        CancellationToken cancellationToken = default)
+        where T : class =>
+            await efCoreClient.BulkUpsertAsync(objects, useTransaction, cancellationToken);
+
+    private async ValueTask<bool> ExistsAsync<T>(
+        object[] objectIds,
+        CancellationToken cancellationToken = default)
+        where T : class =>
+            await efCoreClient.ExistsAsync<T>(objectIds, cancellationToken);
 }
 ```

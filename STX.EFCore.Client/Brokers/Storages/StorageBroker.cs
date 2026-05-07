@@ -46,11 +46,17 @@ namespace STX.EFCore.Client.Brokers.Storages
                 await this.dbContext.AddRangeAsync(objects, cancellationToken);
 
         public async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects, CancellationToken cancellationToken = default)
-            where T : class =>
-                this.dbContext.UpdateRange(objects);
+            where T : class
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            this.dbContext.UpdateRange(objects);
+        }
 
         public async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects, CancellationToken cancellationToken = default)
-            where T : class =>
+            where T : class
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             this.dbContext.RemoveRange(objects);
+        }
     }
 }
