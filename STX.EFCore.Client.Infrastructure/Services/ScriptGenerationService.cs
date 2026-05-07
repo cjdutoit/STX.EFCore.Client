@@ -88,7 +88,7 @@ namespace STX.EFCore.Client.Infrastructure.Services
                                 {
                                     Name = "Deploy Acceptance Database",
                                     Run =
-                                        $"dotnet ef database update " +
+                                        $"dotnet tool run dotnet-ef database update " +
                                         $"--project {acceptanceTestProjectName}/{acceptanceTestProjectName}.csproj " +
                                         $"--startup-project {acceptanceTestProjectName}/{acceptanceTestProjectName}.csproj"
                                 },
@@ -97,7 +97,7 @@ namespace STX.EFCore.Client.Infrastructure.Services
                                 {
                                     Name = "Deploy Integration Database",
                                     Run =
-                                        $"dotnet ef database update " +
+                                        $"dotnet tool run dotnet-ef database update " +
                                         $"--project {integrationTestProjectName}/{integrationTestProjectName}.csproj " +
                                         $"--startup-project {integrationTestProjectName}/{integrationTestProjectName}.csproj"
                                 },
