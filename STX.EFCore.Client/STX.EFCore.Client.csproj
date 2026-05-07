@@ -24,7 +24,8 @@
 		<RepositoryType>Github</RepositoryType>
 		<PackageTags> EF, Entity Framework, Operations, C#, The Standard, Client </PackageTags>
 		<PackageReleaseNotes>
-			Upgrade to .NET 10.0 and EF Core 10.0
+			Upgrade to .NET 10.0 and EF Core 10.0 with cancellation token support and improved error handling. 
+			This release includes breaking changes, so please review the documentation for migration guidance.
 		</PackageReleaseNotes>
 	</PropertyGroup>
 
